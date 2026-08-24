@@ -11,9 +11,13 @@ app.use(express.static('public'));
 const AI_PROMPT = `
 You are "TradeContentAI", a professional social media manager for forex traders.
 
-Your job is to create engaging social media content for forex traders that can be used on Instagram, TikTok, Facebook and X/Twitter.
+Your job is to create ONE high-quality social media post for forex traders.
 
-Create EXACTLY 3 different posts based on the user's request.
+The post can be used on:
+- Instagram
+- TikTok
+- Facebook
+- X/Twitter
 
 Content topics can include:
 - Smart Money Concepts (SMC)
@@ -26,41 +30,35 @@ Content topics can include:
 - Trading Strategies
 
 Rules:
-1. Every post must have a strong hook that stops people from scrolling.
-2. Use numbers, mistakes, warnings, or curiosity when appropriate.
-3. Give practical and useful information.
-4. Tone must be confident, direct and helpful, like an experienced trading mentor.
-5. Do not make unrealistic promises about profits.
-6. Do not guarantee that a strategy will make money.
-7. Every post must end with a clear CTA such as "Comment ___" or "DM me ___".
-8. Give 3 relevant hashtags for every post.
-9. Give a caption for every post.
-10. Make the 3 posts meaningfully different from each other.
+
+1. Create EXACTLY ONE post.
+2. Give the post a strong hook that stops people from scrolling.
+3. Use numbers, mistakes, warnings, or curiosity when appropriate.
+4. Give practical and useful information.
+5. Tone must be confident, direct and helpful, like an experienced trading mentor.
+6. Do not make unrealistic promises about profits.
+7. Do not guarantee that a strategy will make money.
+8. End with a clear CTA such as "Comment ___" or "DM me ___".
+9. Give exactly 3 relevant hashtags.
+10. Give one caption.
+11. Make the content original and useful.
+12. Do NOT create POST 2 or POST 3.
+13. Do NOT give multiple variations.
+14. Return ONLY ONE complete post.
 
 Use EXACTLY this format:
 
-POST 1:
+POST:
 TYPE:
-HOOK:
-BODY:
-CTA:
-CAPTION:
-HASHTAGS:
 
-POST 2:
-TYPE:
 HOOK:
-BODY:
-CTA:
-CAPTION:
-HASHTAGS:
 
-POST 3:
-TYPE:
-HOOK:
 BODY:
+
 CTA:
+
 CAPTION:
+
 HASHTAGS:
 
 User request:
@@ -88,12 +86,14 @@ app.post('/generate', async (req, res) => {
 
     const response = await fetch(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
-        encodeURIComponent(process.env.GEMINI_API_KEY),
+      encodeURIComponent(process.env.GEMINI_API_KEY),
       {
         method: 'POST',
+
         headers: {
           'Content-Type': 'application/json'
         },
+
         body: JSON.stringify({
           contents: [
             {
@@ -104,9 +104,10 @@ app.post('/generate', async (req, res) => {
               ]
             }
           ],
+
           generationConfig: {
             temperature: 0.8,
-            maxOutputTokens: 2500
+            maxOutputTokens: 1200
           }
         })
       }
@@ -117,10 +118,10 @@ app.post('/generate', async (req, res) => {
     if (!response.ok) {
       console.error('Gemini API error:', data);
 
-      return res.status(500).json({
+      return res.status(response.status).json({
         error:
           data?.error?.message ||
-          'Gemini could not generate the posts. Please try again.'
+          'Gemini could not generate the post. Please try again.'
       });
     }
 
@@ -148,7 +149,7 @@ app.post('/generate', async (req, res) => {
     res.status(500).json({
       error:
         error?.message ||
-        'Something went wrong while generating your posts.'
+        'Something went wrong while generating your post.'
     });
   }
 });
