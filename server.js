@@ -65,66 +65,284 @@ HASHTAGS:
 USER REQUEST:
 `;
 
+
+/* =========================================================
+   SUPABASE CONFIGURATION
+   ========================================================= */
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+
+/* =========================================================
+   VERIFY SUPABASE USER
+   ========================================================= */
+
+async function getSupabaseUser(accessToken) {
+
+  if (!accessToken) {
+    return null;
+  }
+
+  const response = await fetch(
+    `${SUPABASE_URL}/auth/v1/user`,
+    {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'apikey': SUPABASE_SERVICE_ROLE_KEY
+      }
+    }
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return await response.json();
+}
+
+
+/* =========================================================
+   GENERATE POST
+   ========================================================= */
+
 app.post('/generate', async (req, res) => {
+
   try {
+
     const { topic } = req.body;
 
     if (!topic || typeof topic !== 'string' || topic.trim() === '') {
+
       return res.status(400).json({
         error: 'Please enter a topic or idea first.'
       });
+
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY is missing.');
+
+    /* -----------------------------------------------------
+       CHECK SUPABASE CONFIGURATION
+       ----------------------------------------------------- */
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+
+      console.error(
+        'Supabase server environment variables are missing.'
+      );
 
       return res.status(500).json({
-        error: 'The AI service is not configured yet. Please add GEMINI_API_KEY in Render Environment Variables.'
+        error: 'The server authentication system is not configured yet.'
       });
+
     }
 
-    const prompt = AI_PROMPT + topic.trim();
 
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
-      encodeURIComponent(process.env.GEMINI_API_KEY),
-      {
-        method: 'POST',
+    /* -----------------------------------------------------
+       GET LOGIN TOKEN
+       ----------------------------------------------------- */
 
-        headers: {
-          'Content-Type': 'application/json'
-        },
+    const authHeader = req.headers.authorization || '';
 
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: prompt
-                }
-              ]
-            }
-          ],
+    if (!authHeader.startsWith('Bearer ')) {
 
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 1200
-          }
-        })
+      return res.status(401).json({
+        error: 'Please log in before generating a post.'
+      });
+
+    }
+
+    const accessToken =
+      authHeader.substring('Bearer '.length).trim();
+
+
+    /* -----------------------------------------------------
+       VERIFY USER
+       ----------------------------------------------------- */
+
+    const user =
+      await getSupabaseUser(accessToken);
+
+    if (!user || !user.id) {
+
+      return res.status(401).json({
+        error: 'Your login session is invalid or expired. Please log in again.'
+      });
+
+    }
+
+
+    /* -----------------------------------------------------
+       CHECK GEMINI CONFIGURATION
+       ----------------------------------------------------- */
+
+    if (!process.env.GEMINI_API_KEY) {
+
+      console.error(
+        'GEMINI_API_KEY is missing.'
+      );
+
+      return res.status(500).json({
+        error:
+          'The AI service is not configured yet. Please add GEMINI_API_KEY in Render Environment Variables.'
+      });
+
+    }
+
+
+    /* -----------------------------------------------------
+       CHECK + USE DAILY GENERATION
+       ----------------------------------------------------- */
+
+    const generationResponse =
+      await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/use_generation`,
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_SERVICE_ROLE_KEY,
+            'Authorization':
+              `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+          },
+
+          body: JSON.stringify({
+            requested_topic: topic.trim()
+          })
+        }
+      );
+
+
+    const generationResult =
+      await generationResponse.json();
+
+
+    if (!generationResponse.ok) {
+
+      console.error(
+        'Supabase generation error:',
+        generationResult
+      );
+
+      return res.status(500).json({
+        error:
+          'Could not check your daily generation limit. Please try again.'
+      });
+
+    }
+
+
+    if (!generationResult.allowed) {
+
+      if (
+        generationResult.reason ===
+        'DAILY_LIMIT_REACHED'
+      ) {
+
+        return res.status(429).json({
+
+          error:
+            "You've used all 3 free generations for today. Come back tomorrow.",
+
+          used:
+            generationResult.used || 3,
+
+          remaining: 0
+
+        });
+
       }
-    );
 
-    const data = await response.json();
 
-    if (!response.ok) {
-      console.error('Gemini API error:', data);
+      return res.status(401).json({
+        error: 'Please log in before generating a post.'
+      });
 
-      return res.status(response.status).json({
+    }
+
+
+    /* -----------------------------------------------------
+       GENERATE WITH GEMINI
+       ----------------------------------------------------- */
+
+    const prompt =
+      AI_PROMPT + topic.trim();
+
+
+    const geminiResponse =
+      await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
+        encodeURIComponent(
+          process.env.GEMINI_API_KEY
+        ),
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type':
+              'application/json'
+          },
+
+          body: JSON.stringify({
+
+            contents: [
+
+              {
+                parts: [
+
+                  {
+                    text: prompt
+                  }
+
+                ]
+              }
+
+            ],
+
+            generationConfig: {
+
+              temperature: 0.8,
+
+              maxOutputTokens: 1200
+
+            }
+
+          })
+
+        }
+      );
+
+
+    const data =
+      await geminiResponse.json();
+
+
+    if (!geminiResponse.ok) {
+
+      console.error(
+        'Gemini API error:',
+        data
+      );
+
+      return res.status(
+        geminiResponse.status
+      ).json({
+
         error:
           data?.error?.message ||
           'Gemini could not generate the post. Please try again.'
+
       });
+
     }
+
+
+    /* -----------------------------------------------------
+       GET GENERATED CONTENT
+       ----------------------------------------------------- */
 
     const content =
       data?.candidates?.[0]?.content?.parts
@@ -132,38 +350,151 @@ app.post('/generate', async (req, res) => {
         .join('')
         .trim();
 
+
     if (!content) {
-      console.error('Unexpected Gemini response:', data);
+
+      console.error(
+        'Unexpected Gemini response:',
+        data
+      );
 
       return res.status(500).json({
-        error: 'The AI returned an empty response. Please try again.'
+
+        error:
+          'The AI returned an empty response. Please try again.'
+
       });
+
     }
 
+
+    /* -----------------------------------------------------
+       SAVE GENERATION HISTORY
+       ----------------------------------------------------- */
+
+    const historyResponse =
+      await fetch(
+        `${SUPABASE_URL}/rest/v1/generation_history`,
+        {
+          method: 'POST',
+
+          headers: {
+
+            'Content-Type':
+              'application/json',
+
+            'apikey':
+              SUPABASE_SERVICE_ROLE_KEY,
+
+            'Authorization':
+              `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+
+            'Prefer':
+              'return=minimal'
+
+          },
+
+          body: JSON.stringify({
+
+            user_id:
+              user.id,
+
+            topic:
+              topic.trim(),
+
+            content:
+              content
+
+          })
+
+        }
+      );
+
+
+    if (!historyResponse.ok) {
+
+      const historyError =
+        await historyResponse.text();
+
+      console.error(
+        'History save error:',
+        historyError
+      );
+
+      // The generation itself succeeded,
+      // so we still return the content.
+    }
+
+
+    /* -----------------------------------------------------
+       SUCCESS
+       ----------------------------------------------------- */
+
     res.json({
-      content: content
+
+      content:
+        content,
+
+      used:
+        generationResult.used,
+
+      remaining:
+        generationResult.remaining
+
     });
 
-  } catch (error) {
-    console.error('Server error:', error);
+  }
+
+  catch (error) {
+
+    console.error(
+      'Server error:',
+      error
+    );
 
     res.status(500).json({
+
       error:
         error?.message ||
         'Something went wrong while generating your post.'
+
     });
+
   }
+
 });
+
+
+/* =========================================================
+   HEALTH CHECK
+   ========================================================= */
 
 app.get('/health', (req, res) => {
+
   res.json({
+
     status: 'ok',
-    message: 'TradeContentAI server is running.'
+
+    message:
+      'TradeContentAI server is running.'
+
   });
+
 });
 
-const PORT = process.env.PORT || 3000;
+
+/* =========================================================
+   START SERVER
+   ========================================================= */
+
+const PORT =
+  process.env.PORT || 3000;
+
 
 app.listen(PORT, () => {
-  console.log(`TradeContentAI server running on port ${PORT}`);
+
+  console.log(
+    `TradeContentAI server running on port ${PORT}`
+  );
+
 });
