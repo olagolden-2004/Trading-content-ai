@@ -1,134 +1,177 @@
 <!DOCTYPE html>
+
 <html>
+
 <head>
-  <title>TradeContentAI</title>
 
-  <style>
-    body {
-      font-family: Arial;
-      background: #0a0a0a;
-      color: white;
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
-    }
+<title>TradeContentAI</title>
 
-    textarea,
-    button {
-      width: 100%;
-      padding: 15px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
+<style>
 
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
+body {
+    font-family: Arial;
+    background: #0a0a0a;
+    color: white;
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+}
 
-    button {
-      background: #00ff88;
-      color: black;
-      font-weight: bold;
-      cursor: pointer;
-    }
+textarea,
+button {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    box-sizing: border-box;
+}
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
 
-    #output {
-      background: #1a1a1a;
-      padding: 20px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      line-height: 1.6;
-      min-height: 50px;
-    }
+button {
+    background: #00ff88;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+}
 
-    .error {
-      color: #ff6b6b;
-    }
-  </style>
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#output {
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    min-height: 50px;
+    margin-top: 15px;
+}
+
+.error {
+    color: #ff6b6b;
+}
+
+.success {
+    color: white;
+}
+
+</style>
+
 </head>
 
 <body>
 
-  <h1>🔥 TradeContentAI</h1>
+<h1>🔥 TradeContentAI</h1>
 
-  <p>What do you want to post about today?</p>
+<p>What do you want to post about today?</p>
 
-  <textarea
+<textarea
     id="topic"
     rows="3"
     placeholder="Example: 3 mistakes new traders make with risk management"
-  ></textarea>
+></textarea>
 
-  <button id="generateButton" onclick="generate()">
-    Generate 3 Posts
-  </button>
+<button id="generateButton" onclick="generate()">
+    Generate Post
+</button>
 
-  <div id="output"></div>
+<div id="output"></div>
 
-  <script>
-    async function generate() {
-      const topic = document.getElementById('topic').value.trim();
-      const output = document.getElementById('output');
-      const button = document.getElementById('generateButton');
+<script>
 
-      if (!topic) {
+async function generate() {
+
+    const topic = document.getElementById('topic').value.trim();
+
+    const output = document.getElementById('output');
+
+    const button = document.getElementById('generateButton');
+
+    if (!topic) {
+
         output.className = 'error';
+
         output.innerText = 'Please enter a topic first.';
+
         return;
-      }
+    }
 
-      output.className = '';
-      output.innerText = 'Generating your 3 posts...';
-      button.disabled = true;
+    output.className = 'success';
 
-      try {
+    output.innerText = 'Generating your post...';
+
+    button.disabled = true;
+
+    button.innerText = 'Generating...';
+
+    try {
+
         const res = await fetch('/generate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            topic: topic
-          })
+
+            method: 'POST',
+
+            headers: {
+                'Content-Type': 'application/json'
+            },
+
+            body: JSON.stringify({
+                topic: topic
+            })
+
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(
-            data.error || 'The server could not generate your posts.'
-          );
+
+            throw new Error(
+                data.error ||
+                'The server could not generate your post.'
+            );
+
         }
 
         if (!data.content) {
-          throw new Error(
-            'The AI returned no content. Please try again.'
-          );
+
+            throw new Error(
+                'The AI returned no content. Please try again.'
+            );
+
         }
 
-        output.className = '';
+        output.className = 'success';
+
         output.innerText = data.content;
 
-      } catch (error) {
+    } catch (error) {
+
         console.error(error);
 
         output.className = 'error';
+
         output.innerText =
-          '❌ Error: ' + error.message;
-      } finally {
+            '❌ Error: ' + error.message;
+
+    } finally {
+
         button.disabled = false;
-      }
+
+        button.innerText = 'Generate Another Post';
+
     }
-  </script>
+
+}
+
+</script>
 
 </body>
+
 </html>
