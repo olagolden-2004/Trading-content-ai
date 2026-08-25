@@ -186,6 +186,7 @@
 
         <div>
             👤 <span id="userEmail"></span>
+
             <div class="small">
                 Free generations remaining:
                 <span id="remaining">3</span>
@@ -280,6 +281,7 @@ async function signup() {
     if (!email || !password) {
 
         message.className = "error";
+
         message.innerText =
             "Please enter your email and password.";
 
@@ -289,6 +291,7 @@ async function signup() {
     if (password.length < 6) {
 
         message.className = "error";
+
         message.innerText =
             "Password must be at least 6 characters.";
 
@@ -296,7 +299,9 @@ async function signup() {
     }
 
     message.className = "success";
-    message.innerText = "Creating your account...";
+
+    message.innerText =
+        "Creating your account...";
 
     const { data, error } =
         await supabaseClient.auth.signUp({
@@ -307,7 +312,9 @@ async function signup() {
     if (error) {
 
         message.className = "error";
-        message.innerText = error.message;
+
+        message.innerText =
+            error.message;
 
         return;
     }
@@ -315,6 +322,7 @@ async function signup() {
     if (data.user && !data.session) {
 
         message.className = "success";
+
         message.innerText =
             "✅ Account created! Check your email to confirm your account, then log in.";
 
@@ -346,6 +354,7 @@ async function login() {
     if (!email || !password) {
 
         message.className = "error";
+
         message.innerText =
             "Please enter your email and password.";
 
@@ -353,7 +362,9 @@ async function login() {
     }
 
     message.className = "success";
-    message.innerText = "Logging in...";
+
+    message.innerText =
+        "Logging in...";
 
     const { data, error } =
         await supabaseClient.auth.signInWithPassword({
@@ -364,7 +375,9 @@ async function login() {
     if (error) {
 
         message.className = "error";
-        message.innerText = error.message;
+
+        message.innerText =
+            error.message;
 
         return;
     }
@@ -498,6 +511,7 @@ async function generate() {
     if (!topic) {
 
         output.className = "error";
+
         output.innerText =
             "Please enter a topic first.";
 
@@ -511,13 +525,16 @@ async function generate() {
     if (!user) {
 
         output.className = "error";
+
         output.innerText =
             "Please log in first.";
 
         return;
     }
 
+
     // Check daily limit
+
     const today = new Date();
 
     const start =
@@ -540,18 +557,24 @@ async function generate() {
     if ((count || 0) >= 3) {
 
         output.className = "error";
+
         output.innerText =
             "You've used your 3 free generations for today. Come back tomorrow.";
 
         return;
     }
 
+
     output.className = "success";
+
     output.innerText =
         "Generating your post...";
 
     button.disabled = true;
-    button.innerText = "Generating...";
+
+    button.innerText =
+        "Generating...";
+
 
     try {
 
@@ -559,12 +582,21 @@ async function generate() {
             data: { session }
         } = await supabaseClient.auth.getSession();
 
+        if (!session) {
+
+            throw new Error(
+                "Your login session has expired. Please log in again."
+            );
+        }
+
+
         const res = await fetch("/generate", {
 
             method: "POST",
 
             headers: {
                 "Content-Type": "application/json",
+
                 "Authorization":
                     "Bearer " + session.access_token
             },
@@ -575,7 +607,9 @@ async function generate() {
 
         });
 
+
         const data = await res.json();
+
 
         if (!res.ok) {
 
@@ -585,6 +619,7 @@ async function generate() {
             );
         }
 
+
         if (!data.content) {
 
             throw new Error(
@@ -592,17 +627,26 @@ async function generate() {
             );
         }
 
+
         output.className = "success";
-        output.innerText = data.content;
+
+        output.innerText =
+            data.content;
+
 
         if (typeof data.remaining !== "undefined") {
-    document.getElementById("remaining").innerText =
-        data.remaining;
+
+            document.getElementById("remaining")
+                .innerText = data.remaining;
         }
+
 
         await updateRemaining(user.id);
 
-        document.getElementById("topic").value = "";
+
+        document.getElementById("topic")
+            .value = "";
+
 
     } catch (error) {
 
@@ -616,16 +660,20 @@ async function generate() {
     } finally {
 
         button.disabled = false;
+
         button.innerText =
             "Generate Another Post";
     }
 }
 
 
-// Start application
+// ==========================================
+// START APPLICATION
+// ==========================================
+
 checkUser();
 
 </script>
 
 </body>
-</html>
+        </html>
