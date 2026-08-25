@@ -258,7 +258,60 @@ async function getOwnerDashboard(accessToken) {
     }
 }
 
+// ==========================================
+// OWNER DASHBOARD
+// ==========================================
 
+app.get('/owner-dashboard', async (req, res) => {
+
+    try {
+
+        const authorization =
+            req.headers.authorization || '';
+
+        const accessToken =
+            authorization.startsWith('Bearer ')
+                ? authorization.substring(7)
+                : null;
+
+        const authResult =
+            await getAuthenticatedUser(accessToken);
+
+        if (!authResult.user) {
+
+            return res.status(401).json({
+                error: authResult.error
+            });
+        }
+
+        const dashboard =
+            await getOwnerDashboard(accessToken);
+
+        if (!dashboard.success) {
+
+            return res.status(403).json({
+                error: dashboard.error
+            });
+        }
+
+        return res.json({
+            success: true,
+            dashboard: dashboard.data
+        });
+
+    } catch (error) {
+
+        console.error(
+            'Owner dashboard route error:',
+            error
+        );
+
+        return res.status(500).json({
+            error:
+                'Something went wrong loading the owner dashboard.'
+        });
+    }
+});
 // ==========================================
 // GENERATE POST
 // ==========================================
