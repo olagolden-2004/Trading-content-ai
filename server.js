@@ -8,6 +8,11 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static('public'));
 
+
+/* ==========================================
+   AI PROMPT
+   ========================================== */
+
 const AI_PROMPT = `
 You are "TradeContentAI", a professional AI social media content creator.
 
@@ -39,7 +44,7 @@ CONTENT RULES:
 5. Do not force the content into a particular niche.
 6. Do not make unrealistic promises.
 7. Do not guarantee results, income, followers, or success.
-8. End with a clear CTA such as "Comment ___", "DM me ___", "Save this post", or "Share this with someone who needs it."
+8. End with a clear CTA.
 9. Give exactly 3 relevant hashtags.
 10. Give one caption.
 11. Make the content original and natural.
@@ -67,77 +72,67 @@ USER REQUEST:
 
 
 /* ==========================================
-   VERIFY SUPABASE LOGIN
+   VERIFY SUPABASE USER
    ========================================== */
 
 async function getAuthenticatedUser(req) {
 
-  const authorization = req.headers.authorization;
+    const authorization =
+        req.headers.authorization;
 
-  if (!authorization) {
-    return null;
-  }
+    if (!authorization) {
+        return null;
+    }
 
-  if (!authorization.startsWith('Bearer ')) {
-    return null;
-  }
+    if (!authorization.startsWith('Bearer ')) {
+        return null;
+    }
 
-  const token = authorization.substring(7);
+    const token =
+        authorization.substring(7).trim();
 
-  if (!token) {
-    return null;
-  }
+    if (!token) {
+        return null;
+    }
 
-  if (!process.env.SUPABASE_URL) {
-    console.error('SUPABASE_URL is missing.');
-    return null;
-  }
+    try {
 
-  if (!process.env.SUPABASE_ANON_KEY) {
-    console.error('SUPABASE_ANON_KEY is missing.');
-    return null;
-  }
+        const response = await fetch(
+            process.env.SUPABASE_URL +
+            '/auth/v1/user',
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization':
+                        'Bearer ' + token,
+                    'apikey':
+                        process.env.SUPABASE_ANON_KEY
+                }
+            }
+        );
 
-  try {
-
-    const response = await fetch(
-      process.env.SUPABASE_URL + '/auth/v1/user',
-      {
-        method: 'GET',
-
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'apikey': process.env.SUPABASE_ANON_KEY
+        if (!response.ok) {
+            return null;
         }
-      }
-    );
 
-    if (!response.ok) {
-      console.error(
-        'Supabase authentication failed:',
-        response.status
-      );
+        const user =
+            await response.json();
 
-      return null;
+        if (!user || !user.id) {
+            return null;
+        }
+
+        return user;
+
+    } catch (error) {
+
+        console.error(
+            'Authentication error:',
+            error
+        );
+
+        return null;
     }
-
-    const user = await response.json();
-
-    if (!user || !user.id) {
-      return null;
-    }
-
-    return user;
-
-  } catch (error) {
-
-    console.error(
-      'Authentication verification error:',
-      error
-    );
-
-    return null;
-  }
 }
 
 
@@ -147,167 +142,265 @@ async function getAuthenticatedUser(req) {
 
 app.post('/generate', async (req, res) => {
 
-  try {
+    try {
 
-    const user = await getAuthenticatedUser(req);
+        /* --------------------------------------
+           1. VERIFY LOGIN
+           -------------------------------------- */
 
-    if (!user) {
+        const user =
+            await getAuthenticatedUser(req);
 
-      return res.status(401).json({
-        error: 'Please log in before generating a post.'
-      });
+        if (!user) {
 
-    }
+            return res.status(401).json({
+                error:
+                    'Please log in before generating a post.'
+            });
 
-
-    const { topic } = req.body;
-
-    if (
-      !topic ||
-      typeof topic !== 'string' ||
-      topic.trim() === ''
-    ) {
-
-      return res.status(400).json({
-        error: 'Please enter a topic or idea first.'
-      });
-
-    }
+        }
 
 
-    if (!process.env.GEMINI_API_KEY) {
+        /* --------------------------------------
+           2. CHECK TOPIC
+           -------------------------------------- */
 
-      console.error(
-        'GEMINI_API_KEY is missing.'
-      );
+        const { topic } =
+            req.body;
 
-      return res.status(500).json({
-        error:
-          'The AI service is not configured yet. Please add GEMINI_API_KEY in Render Environment Variables.'
-      });
+        if (
+            !topic ||
+            typeof topic !== 'string' ||
+            topic.trim() === ''
+        ) {
 
-    }
+            return res.status(400).json({
+                error:
+                    'Please enter a topic or idea first.'
+            });
+
+        }
 
 
-    const prompt =
-      AI_PROMPT + '\n' + topic.trim();
+        /* --------------------------------------
+           3. CHECK GEMINI
+           -------------------------------------- */
+
+        if (!process.env.GEMINI_API_KEY) {
+
+            return res.status(500).json({
+                error:
+                    'The AI service is not configured.'
+            });
+
+        }
 
 
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
-      encodeURIComponent(
-        process.env.GEMINI_API_KEY
-      ),
-      {
+        /* --------------------------------------
+           4. GENERATE WITH GEMINI
+           -------------------------------------- */
 
-        method: 'POST',
+        const prompt =
+            AI_PROMPT +
+            '\n' +
+            topic.trim();
 
-        headers: {
-          'Content-Type': 'application/json'
-        },
 
-        body: JSON.stringify({
-
-          contents: [
-
-            {
-              parts: [
-
+        const geminiResponse =
+            await fetch(
+                'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
+                encodeURIComponent(
+                    process.env.GEMINI_API_KEY
+                ),
                 {
-                  text: prompt
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    body: JSON.stringify({
+
+                        contents: [
+                            {
+                                parts: [
+                                    {
+                                        text: prompt
+                                    }
+                                ]
+                            }
+                        ],
+
+                        generationConfig: {
+                            temperature: 0.8,
+                            maxOutputTokens: 1200
+                        }
+
+                    })
                 }
-
-              ]
-            }
-
-          ],
-
-          generationConfig: {
-
-            temperature: 0.8,
-
-            maxOutputTokens: 1200
-
-          }
-
-        })
-
-      }
-    );
+            );
 
 
-    const data = await response.json();
+        const data =
+            await geminiResponse.json();
 
 
-    if (!response.ok) {
+        if (!geminiResponse.ok) {
 
-      console.error(
-        'Gemini API error:',
-        data
-      );
+            console.error(
+                'Gemini error:',
+                data
+            );
 
-      return res.status(
-        response.status
-      ).json({
+            return res.status(
+                geminiResponse.status
+            ).json({
 
-        error:
-          data?.error?.message ||
-          'Gemini could not generate the post. Please try again.'
+                error:
+                    data?.error?.message ||
+                    'Gemini could not generate the post.'
 
-      });
+            });
+
+        }
+
+
+        const content =
+            data?.candidates?.[0]?.content?.parts
+                ?.map(
+                    part => part.text || ''
+                )
+                .join('')
+                .trim();
+
+
+        if (!content) {
+
+            return res.status(500).json({
+                error:
+                    'The AI returned an empty response.'
+            });
+
+        }
+
+
+        /* --------------------------------------
+           5. SECURELY SAVE + CHECK DAILY LIMIT
+           -------------------------------------- */
+
+        const saveResponse =
+            await fetch(
+                process.env.SUPABASE_URL +
+                '/rest/v1/rpc/save_generation',
+                {
+                    method: 'POST',
+
+                    headers: {
+
+                        'Content-Type':
+                            'application/json',
+
+                        'apikey':
+                            process.env.SUPABASE_SERVICE_ROLE_KEY,
+
+                        'Authorization':
+                            'Bearer ' +
+                            process.env.SUPABASE_SERVICE_ROLE_KEY
+
+                    },
+
+                    body: JSON.stringify({
+
+                        p_user_id:
+                            user.id,
+
+                        p_topic:
+                            topic.trim(),
+
+                        p_content:
+                            content
+
+                    })
+                }
+            );
+
+
+        const saveResult =
+            await saveResponse.json();
+
+
+        if (!saveResponse.ok) {
+
+            console.error(
+                'Supabase save_generation error:',
+                saveResult
+            );
+
+            return res.status(500).json({
+                error:
+                    'Could not record this generation. Please try again.'
+            });
+
+        }
+
+
+        /* --------------------------------------
+           6. LIMIT REACHED
+           -------------------------------------- */
+
+        if (!saveResult.allowed) {
+
+            return res.status(429).json({
+
+                error:
+                    "You've used all 3 free generations for today. Come back tomorrow.",
+
+                used:
+                    saveResult.used,
+
+                remaining:
+                    0
+
+            });
+
+        }
+
+
+        /* --------------------------------------
+           7. SUCCESS
+           -------------------------------------- */
+
+        return res.json({
+
+            content:
+                content,
+
+            used:
+                saveResult.used,
+
+            remaining:
+                saveResult.remaining
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            'Server error:',
+            error
+        );
+
+        return res.status(500).json({
+
+            error:
+                error?.message ||
+                'Something went wrong while generating your post.'
+
+        });
 
     }
-
-
-    const content =
-      data?.candidates?.[0]?.content?.parts
-        ?.map(
-          part => part.text || ''
-        )
-        .join('')
-        .trim();
-
-
-    if (!content) {
-
-      console.error(
-        'Unexpected Gemini response:',
-        data
-      );
-
-      return res.status(500).json({
-
-        error:
-          'The AI returned an empty response. Please try again.'
-
-      });
-
-    }
-
-
-    res.json({
-
-      content: content
-
-    });
-
-
-  } catch (error) {
-
-    console.error(
-      'Server error:',
-      error
-    );
-
-    res.status(500).json({
-
-      error:
-        error?.message ||
-        'Something went wrong while generating your post.'
-
-    });
-
-  }
 
 });
 
@@ -318,14 +411,15 @@ app.post('/generate', async (req, res) => {
 
 app.get('/health', (req, res) => {
 
-  res.json({
+    res.json({
 
-    status: 'ok',
+        status:
+            'ok',
 
-    message:
-      'TradeContentAI server is running.'
+        message:
+            'TradeContentAI server is running.'
 
-  });
+    });
 
 });
 
@@ -335,13 +429,13 @@ app.get('/health', (req, res) => {
    ========================================== */
 
 const PORT =
-  process.env.PORT || 3000;
+    process.env.PORT || 3000;
 
 
 app.listen(PORT, () => {
 
-  console.log(
-    `TradeContentAI server running on port ${PORT}`
-  );
+    console.log(
+        `TradeContentAI server running on port ${PORT}`
+    );
 
 });
