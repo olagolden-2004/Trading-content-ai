@@ -1,1 +1,672 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TradeContentAI Owner Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            padding: 20px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #999;
+            margin-bottom: 25px;
+        }
+
+        .box {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background: #151515;
+        }
+
+        .success {
+            color: #00ff88;
+        }
+
+        .error {
+            color: #ff6b6b;
+        }
+
+        button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
+        button.secondary {
+            background: #333;
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #151515;
+            border: 1px solid #252525;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .card-title {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        pre {
+            background: #080808;
+            border: 1px solid #222;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #ddd;
+        }
+
+        .loading {
+            color: #aaa;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🔥 TradeContentAI</h1>
+
+<div class="subtitle">
+    Owner Dashboard
+</div>
+
+<div id="status" class="status loading">
+    Checking owner access...
+</div>
+
+<div id="loginBox" class="box" style="display:none;">
+    <h2>Owner Login Required</h2>
+
+    <p>
+        Please log in to your TradeContentAI account first.
+    </p>
+
+    <button onclick="goToApp()">
+        Go to TradeContentAI
+    </button>
+</div>
+
+<div id="dashboard" class="dashboard">
+
+    <div class="box">
+
+        <strong>Owner account:</strong>
+
+        <span id="ownerEmail">
+            Loading...
+        </span>
+
+        <br><br>
+
+        <button onclick="loadDashboard()">
+            Refresh Dashboard
+        </button>
+
+        <button
+            class="secondary"
+            onclick="goToApp()"
+        >
+            Back to App
+        </button>
+
+    </div>
+
+
+    <div class="cards">
+
+        <div class="card">
+
+            <div class="card-title">
+                Users
+            </div>
+
+            <div
+                id="usersValue"
+                class="card-value"
+            >
+                —
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                Generations
+            </div>
+
+            <div
+                id="generationsValue"
+                class="card-value"
+            >
+                —
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                Ad Rewards
+            </div>
+
+            <div
+                id="rewardsValue"
+                class="card-value"
+            >
+                —
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                Revenue
+            </div>
+
+            <div
+                id="revenueValue"
+                class="card-value"
+            >
+                —
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="box">
+
+        <h2>Dashboard Data</h2>
+
+        <pre id="dashboardData">
+Loading...
+        </pre>
+
+    </div>
+
+</div>
+
+
+<script>
+
+// ==========================================
+// SUPABASE CONFIG
+// ==========================================
+
+const SUPABASE_URL =
+    "https://rbccdpbzpkexbjvxoqum.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "sb_publishable_xVlsUXU8Wm8ouTf3xeKrzg_X37uHzYo";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+// ==========================================
+// ELEMENTS
+// ==========================================
+
+const statusBox =
+    document.getElementById("status");
+
+const loginBox =
+    document.getElementById("loginBox");
+
+const dashboard =
+    document.getElementById("dashboard");
+
+const ownerEmail =
+    document.getElementById("ownerEmail");
+
+const dashboardData =
+    document.getElementById("dashboardData");
+
+
+// ==========================================
+// GO TO MAIN APP
+// ==========================================
+
+function goToApp() {
+
+    window.location.href = "/";
+
+}
+
+
+// ==========================================
+// SHOW ERROR
+// ==========================================
+
+function showError(message) {
+
+    statusBox.className =
+        "status error";
+
+    statusBox.innerText =
+        message;
+
+}
+
+
+// ==========================================
+// LOAD OWNER DASHBOARD
+// ==========================================
+
+async function loadDashboard() {
+
+    try {
+
+        statusBox.className =
+            "status loading";
+
+        statusBox.innerText =
+            "Loading owner dashboard...";
+
+
+        // ----------------------------------
+        // Get current session
+        // ----------------------------------
+
+        const {
+            data: { session }
+        } = await supabaseClient.auth.getSession();
+
+
+        if (!session) {
+
+            dashboard.style.display =
+                "none";
+
+            loginBox.style.display =
+                "block";
+
+            showError(
+                "You are not logged in."
+            );
+
+            return;
+        }
+
+
+        ownerEmail.innerText =
+            session.user.email || "Owner";
+
+
+        // ----------------------------------
+        // Call secure server endpoint
+        // ----------------------------------
+
+        const response =
+            await fetch(
+                "/owner-dashboard",
+                {
+                    method: "GET",
+
+                    headers: {
+                        "Authorization":
+                            "Bearer " +
+                            session.access_token
+                    }
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        // ----------------------------------
+        // Server rejected request
+        // ----------------------------------
+
+        if (!response.ok) {
+
+            dashboard.style.display =
+                "none";
+
+            showError(
+                result.error ||
+                "You do not have permission to view the owner dashboard."
+            );
+
+            return;
+        }
+
+
+        // ----------------------------------
+        // Dashboard successful
+        // ----------------------------------
+
+        dashboard.style.display =
+            "block";
+
+        loginBox.style.display =
+            "none";
+
+        statusBox.className =
+            "status success";
+
+        statusBox.innerText =
+            "✅ Owner dashboard loaded successfully.";
+
+
+        const data =
+            result.dashboard;
+
+
+        // ----------------------------------
+        // Display raw dashboard data
+        // ----------------------------------
+
+        dashboardData.innerText =
+            JSON.stringify(
+                data,
+                null,
+                2
+            );
+
+
+        // ----------------------------------
+        // Try to display common statistics
+        // ----------------------------------
+
+        displayStatistics(data);
+
+
+    } catch (error) {
+
+        console.error(
+            "Dashboard error:",
+            error
+        );
+
+        showError(
+            error.message ||
+            "Could not load the owner dashboard."
+        );
+    }
+}
+
+
+// ==========================================
+// DISPLAY STATISTICS
+// ==========================================
+
+function displayStatistics(data) {
+
+    if (!data) {
+        return;
+    }
+
+
+    // Convert object to searchable text
+
+    const text =
+        JSON.stringify(data).toLowerCase();
+
+
+    // ----------------------------------
+    // Users
+    // ----------------------------------
+
+    const users =
+        findNumber(
+            data,
+            [
+                "users",
+                "total_users",
+                "user_count"
+            ]
+        );
+
+    if (users !== null) {
+
+        document.getElementById(
+            "usersValue"
+        ).innerText = users;
+
+    }
+
+
+    // ----------------------------------
+    // Generations
+    // ----------------------------------
+
+    const generations =
+        findNumber(
+            data,
+            [
+                "generations",
+                "total_generations",
+                "generation_count",
+                "total_generation_requests"
+            ]
+        );
+
+    if (generations !== null) {
+
+        document.getElementById(
+            "generationsValue"
+        ).innerText = generations;
+
+    }
+
+
+    // ----------------------------------
+    // Rewards
+    // ----------------------------------
+
+    const rewards =
+        findNumber(
+            data,
+            [
+                "rewards",
+                "ad_rewards",
+                "total_rewards",
+                "reward_count"
+            ]
+        );
+
+    if (rewards !== null) {
+
+        document.getElementById(
+            "rewardsValue"
+        ).innerText = rewards;
+
+    }
+
+
+    // ----------------------------------
+    // Revenue
+    // ----------------------------------
+
+    const revenue =
+        findNumber(
+            data,
+            [
+                "revenue",
+                "total_revenue",
+                "earnings"
+            ]
+        );
+
+    if (revenue !== null) {
+
+        document.getElementById(
+            "revenueValue"
+        ).innerText = revenue;
+
+    }
+
+}
+
+
+// ==========================================
+// FIND NUMBER IN DASHBOARD OBJECT
+// ==========================================
+
+function findNumber(object, keys) {
+
+    if (
+        object === null ||
+        typeof object !== "object"
+    ) {
+        return null;
+    }
+
+
+    for (const key of keys) {
+
+        if (
+            Object.prototype.hasOwnProperty.call(
+                object,
+                key
+            )
+        ) {
+
+            const value =
+                object[key];
+
+            if (
+                typeof value === "number" ||
+                typeof value === "string"
+            ) {
+
+                return value;
+            }
+        }
+    }
+
+
+    // Search nested objects
+
+    for (const key in object) {
+
+        if (
+            typeof object[key] === "object" &&
+            object[key] !== null
+        ) {
+
+            const result =
+                findNumber(
+                    object[key],
+                    keys
+                );
+
+            if (result !== null) {
+
+                return result;
+            }
+        }
+    }
+
+
+    return null;
+}
+
+
+// ==========================================
+// CHECK LOGIN ON PAGE LOAD
+// ==========================================
+
+async function checkOwnerAccess() {
+
+    const {
+        data: { session }
+    } = await supabaseClient.auth.getSession();
+
+
+    if (!session) {
+
+        loginBox.style.display =
+            "block";
+
+        showError(
+            "Please log in before opening the owner dashboard."
+        );
+
+        return;
+    }
+
+
+    await loadDashboard();
+}
+
+
+// ==========================================
+// START
+// ==========================================
+
+checkOwnerAccess();
+
+</script>
+
+</body>
+          </html>
