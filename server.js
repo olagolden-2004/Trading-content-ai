@@ -8,10 +8,13 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static('public'));
 
+// ==========================================
+// CONFIGURATION
+// ==========================================
 
-/* ==========================================
-   AI PROMPT
-   ========================================== */
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const AI_PROMPT = `
 You are "TradeContentAI", a professional AI social media content creator.
@@ -44,7 +47,7 @@ CONTENT RULES:
 5. Do not force the content into a particular niche.
 6. Do not make unrealistic promises.
 7. Do not guarantee results, income, followers, or success.
-8. End with a clear CTA.
+8. End with a clear CTA such as "Comment ___", "DM me ___", "Save this post", or "Share this with someone who needs it."
 9. Give exactly 3 relevant hashtags.
 10. Give one caption.
 11. Make the content original and natural.
@@ -71,102 +74,140 @@ USER REQUEST:
 `;
 
 
-/* ==========================================
-   VERIFY SUPABASE USER
-   ========================================== */
+// ==========================================
+// CHECK SUPABASE LOGIN
+// ==========================================
 
-async function getAuthenticatedUser(req) {
+async function getAuthenticatedUser(accessToken) {
 
-    const authorization =
-        req.headers.authorization;
-
-    if (!authorization) {
-        return null;
+    if (!accessToken) {
+        return {
+            user: null,
+            error: 'Please log in before generating a post.'
+        };
     }
 
-    if (!authorization.startsWith('Bearer ')) {
-        return null;
-    }
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        console.error('Supabase environment variables are missing.');
 
-    const token =
-        authorization.substring(7).trim();
-
-    if (!token) {
-        return null;
+        return {
+            user: null,
+            error: 'Supabase is not configured correctly on the server.'
+        };
     }
 
     try {
 
         const response = await fetch(
-            process.env.SUPABASE_URL +
-            '/auth/v1/user',
+            SUPABASE_URL + '/auth/v1/user',
             {
                 method: 'GET',
+
                 headers: {
-                    'Authorization':
-                        'Bearer ' + token,
-                    'apikey':
-                        process.env.SUPABASE_ANON_KEY
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': 'Bearer ' + accessToken
                 }
             }
         );
 
-        if (!response.ok) {
-            return null;
+        const data = await response.json();
+
+        if (!response.ok || !data?.id) {
+
+            return {
+                user: null,
+                error: 'Your login session is invalid or has expired. Please log in again.'
+            };
         }
 
-        const user =
-            await response.json();
-
-        if (!user || !user.id) {
-            return null;
-        }
-
-        return user;
+        return {
+            user: data,
+            error: null
+        };
 
     } catch (error) {
 
-        console.error(
-            'Authentication error:',
-            error
-        );
+        console.error('Supabase auth error:', error);
 
-        return null;
+        return {
+            user: null,
+            error: 'Could not verify your login session.'
+        };
     }
 }
 
 
-/* ==========================================
-   GENERATE POST
-   ========================================== */
+// ==========================================
+// RESERVE ONE GENERATION
+// ==========================================
+
+async function reserveGeneration(accessToken) {
+
+    try {
+
+        const response = await fetch(
+            SUPABASE_URL + '/rest/v1/rpc/reserve_generation',
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': 'Bearer ' + accessToken
+                },
+
+                body: JSON.stringify({})
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+
+            console.error(
+                'Generation reservation error:',
+                data
+            );
+
+            return {
+                allowed: false,
+                error:
+                    data?.message ||
+                    data?.error ||
+                    'Could not check your daily generation limit.'
+            };
+        }
+
+        return data;
+
+    } catch (error) {
+
+        console.error(
+            'Generation reservation request failed:',
+            error
+        );
+
+        return {
+            allowed: false,
+            error: 'Could not connect to the generation limit system.'
+        };
+    }
+}
+
+
+// ==========================================
+// GENERATE POST
+// ==========================================
 
 app.post('/generate', async (req, res) => {
 
     try {
 
-        /* --------------------------------------
-           1. VERIFY LOGIN
-           -------------------------------------- */
+        const { topic } = req.body;
 
-        const user =
-            await getAuthenticatedUser(req);
-
-        if (!user) {
-
-            return res.status(401).json({
-                error:
-                    'Please log in before generating a post.'
-            });
-
-        }
-
-
-        /* --------------------------------------
-           2. CHECK TOPIC
-           -------------------------------------- */
-
-        const { topic } =
-            req.body;
+        // --------------------------------------
+        // Validate topic
+        // --------------------------------------
 
         if (
             !topic ||
@@ -178,209 +219,185 @@ app.post('/generate', async (req, res) => {
                 error:
                     'Please enter a topic or idea first.'
             });
-
         }
 
 
-        /* --------------------------------------
-           3. CHECK GEMINI
-           -------------------------------------- */
+        // --------------------------------------
+        // Get user access token
+        // --------------------------------------
 
-        if (!process.env.GEMINI_API_KEY) {
+        const authorization =
+            req.headers.authorization || '';
+
+        const accessToken =
+            authorization.startsWith('Bearer ')
+                ? authorization.substring(7)
+                : null;
+
+
+        // --------------------------------------
+        // Verify logged-in user
+        // --------------------------------------
+
+        const authResult =
+            await getAuthenticatedUser(accessToken);
+
+        if (!authResult.user) {
+
+            return res.status(401).json({
+                error: authResult.error
+            });
+        }
+
+
+        // --------------------------------------
+        // Check AI configuration
+        // --------------------------------------
+
+        if (!GEMINI_API_KEY) {
+
+            console.error(
+                'GEMINI_API_KEY is missing.'
+            );
 
             return res.status(500).json({
                 error:
-                    'The AI service is not configured.'
+                    'The AI service is not configured yet. Please add GEMINI_API_KEY in Render Environment Variables.'
             });
-
         }
 
 
-        /* --------------------------------------
-           4. GENERATE WITH GEMINI
-           -------------------------------------- */
+        // --------------------------------------
+        // Check Supabase configuration
+        // --------------------------------------
+
+        if (
+            !SUPABASE_URL ||
+            !SUPABASE_ANON_KEY
+        ) {
+
+            return res.status(500).json({
+                error:
+                    'Supabase is not configured correctly on the server.'
+            });
+        }
+
+
+        // --------------------------------------
+        // SECURE 3-PER-DAY CHECK
+        // --------------------------------------
+
+        const reservation =
+            await reserveGeneration(accessToken);
+
+        if (!reservation.allowed) {
+
+            return res.status(429).json({
+                error:
+                    reservation.message ||
+                    reservation.error ||
+                    'You have reached your daily generation limit.'
+            });
+        }
+
+
+        // --------------------------------------
+        // Generate the AI content
+        // --------------------------------------
 
         const prompt =
-            AI_PROMPT +
-            '\n' +
-            topic.trim();
+            AI_PROMPT + topic.trim();
 
+        const response = await fetch(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
+            encodeURIComponent(GEMINI_API_KEY),
+            {
+                method: 'POST',
 
-        const geminiResponse =
-            await fetch(
-                'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
-                encodeURIComponent(
-                    process.env.GEMINI_API_KEY
-                ),
-                {
-                    method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
 
-                    headers: {
-                        'Content-Type':
-                            'application/json'
-                    },
+                body: JSON.stringify({
 
-                    body: JSON.stringify({
-
-                        contents: [
-                            {
-                                parts: [
-                                    {
-                                        text: prompt
-                                    }
-                                ]
-                            }
-                        ],
-
-                        generationConfig: {
-                            temperature: 0.8,
-                            maxOutputTokens: 1200
+                    contents: [
+                        {
+                            parts: [
+                                {
+                                    text: prompt
+                                }
+                            ]
                         }
+                    ],
 
-                    })
-                }
-            );
+                    generationConfig: {
+                        temperature: 0.8,
+                        maxOutputTokens: 1200
+                    }
+
+                })
+            }
+        );
 
 
         const data =
-            await geminiResponse.json();
+            await response.json();
 
 
-        if (!geminiResponse.ok) {
+        // --------------------------------------
+        // Gemini error
+        // --------------------------------------
+
+        if (!response.ok) {
 
             console.error(
-                'Gemini error:',
+                'Gemini API error:',
                 data
             );
 
-            return res.status(
-                geminiResponse.status
-            ).json({
-
+            return res.status(502).json({
                 error:
                     data?.error?.message ||
-                    'Gemini could not generate the post.'
-
+                    'Gemini could not generate the post. Please try again.'
             });
-
         }
 
 
+        // --------------------------------------
+        // Extract generated content
+        // --------------------------------------
+
         const content =
             data?.candidates?.[0]?.content?.parts
-                ?.map(
-                    part => part.text || ''
-                )
+                ?.map(part => part.text || '')
                 .join('')
                 .trim();
 
 
         if (!content) {
 
-            return res.status(500).json({
-                error:
-                    'The AI returned an empty response.'
-            });
-
-        }
-
-
-        /* --------------------------------------
-           5. SECURELY SAVE + CHECK DAILY LIMIT
-           -------------------------------------- */
-
-        const saveResponse =
-            await fetch(
-                process.env.SUPABASE_URL +
-                '/rest/v1/rpc/save_generation',
-                {
-                    method: 'POST',
-
-                    headers: {
-
-                        'Content-Type':
-                            'application/json',
-
-                        'apikey':
-                            process.env.SUPABASE_SERVICE_ROLE_KEY,
-
-                        'Authorization':
-                            'Bearer ' +
-                            process.env.SUPABASE_SERVICE_ROLE_KEY
-
-                    },
-
-                    body: JSON.stringify({
-
-                        p_user_id:
-                            user.id,
-
-                        p_topic:
-                            topic.trim(),
-
-                        p_content:
-                            content
-
-                    })
-                }
-            );
-
-
-        const saveResult =
-            await saveResponse.json();
-
-
-        if (!saveResponse.ok) {
-
             console.error(
-                'Supabase save_generation error:',
-                saveResult
+                'Unexpected Gemini response:',
+                data
             );
 
             return res.status(500).json({
                 error:
-                    'Could not record this generation. Please try again.'
+                    'The AI returned an empty response. Please try again.'
             });
-
         }
 
 
-        /* --------------------------------------
-           6. LIMIT REACHED
-           -------------------------------------- */
-
-        if (!saveResult.allowed) {
-
-            return res.status(429).json({
-
-                error:
-                    "You've used all 3 free generations for today. Come back tomorrow.",
-
-                used:
-                    saveResult.used,
-
-                remaining:
-                    0
-
-            });
-
-        }
-
-
-        /* --------------------------------------
-           7. SUCCESS
-           -------------------------------------- */
+        // --------------------------------------
+        // Success
+        // --------------------------------------
 
         return res.json({
 
-            content:
-                content,
-
-            used:
-                saveResult.used,
+            content: content,
 
             remaining:
-                saveResult.remaining
+                reservation.remaining ?? null
 
         });
 
@@ -399,22 +416,19 @@ app.post('/generate', async (req, res) => {
                 'Something went wrong while generating your post.'
 
         });
-
     }
-
 });
 
 
-/* ==========================================
-   HEALTH CHECK
-   ========================================== */
+// ==========================================
+// HEALTH CHECK
+// ==========================================
 
 app.get('/health', (req, res) => {
 
     res.json({
 
-        status:
-            'ok',
+        status: 'ok',
 
         message:
             'TradeContentAI server is running.'
@@ -424,13 +438,12 @@ app.get('/health', (req, res) => {
 });
 
 
-/* ==========================================
-   START SERVER
-   ========================================== */
+// ==========================================
+// START SERVER
+// ==========================================
 
 const PORT =
     process.env.PORT || 3000;
-
 
 app.listen(PORT, () => {
 
