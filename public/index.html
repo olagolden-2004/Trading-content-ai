@@ -533,36 +533,7 @@ async function generate() {
     }
 
 
-    // Check daily limit
-
-    const today = new Date();
-
-    const start =
-        new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate()
-        ).toISOString();
-
-    const { count } =
-        await supabaseClient
-            .from("generation_history")
-            .select("*", {
-                count: "exact",
-                head: true
-            })
-            .eq("user_id", user.id)
-            .gte("created_at", start);
-
-    if ((count || 0) >= 3) {
-
-        output.className = "error";
-
-        output.innerText =
-            "You've used your 3 free generations for today. Come back tomorrow.";
-
-        return;
-    }
+    
 
 
     output.className = "success";
