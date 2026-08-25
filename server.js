@@ -536,79 +536,7 @@ app.post('/generate', async (req, res) => {
 });
 
 
-// ==========================================
-// OWNER DASHBOARD ROUTE
-// ==========================================
 
-app.get('/owner-dashboard', async (req, res) => {
-
-    try {
-
-        const authorization =
-            req.headers.authorization || '';
-
-        const accessToken =
-            authorization.startsWith('Bearer ')
-                ? authorization.substring(7)
-                : null;
-
-
-        // --------------------------------------
-        // Verify login
-        // --------------------------------------
-
-        const authResult =
-            await getAuthenticatedUser(accessToken);
-
-        if (!authResult.user) {
-
-            return res.status(401).json({
-                error: authResult.error
-            });
-        }
-
-
-        // --------------------------------------
-        // Get owner dashboard
-        // --------------------------------------
-
-        const dashboard =
-            await getOwnerDashboard(accessToken);
-
-
-        if (!dashboard.success) {
-
-            return res.status(403).json({
-                error:
-                    dashboard.error ||
-                    'Access denied.'
-            });
-        }
-
-
-        // --------------------------------------
-        // Return dashboard
-        // --------------------------------------
-
-        return res.json(
-            dashboard.data
-        );
-
-    } catch (error) {
-
-        console.error(
-            'Owner dashboard route error:',
-            error
-        );
-
-        return res.status(500).json({
-
-            error:
-                'Something went wrong while loading the owner dashboard.'
-
-        });
-    }
-});
 
 
 // ==========================================
