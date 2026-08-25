@@ -595,18 +595,9 @@ async function generate() {
         output.className = "success";
         output.innerText = data.content;
 
-        // Record the question
-        const { error: historyError } =
-            await supabaseClient
-                .from("generation_history")
-                .insert({
-                    user_id: user.id,
-                    topic: topic,
-                    content: data.content
-                });
-
-        if (historyError) {
-            console.error(historyError);
+        if (typeof data.remaining !== "undefined") {
+    document.getElementById("remaining").innerText =
+        data.remaining;
         }
 
         await updateRemaining(user.id);
