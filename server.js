@@ -83,7 +83,7 @@ async function getAuthenticatedUser(accessToken) {
     if (!accessToken) {
         return {
             user: null,
-            error: 'Please log in before generating a post.'
+            error: 'Please log in before using TradeContentAI.'
         };
     }
 
@@ -116,7 +116,8 @@ async function getAuthenticatedUser(accessToken) {
 
             return {
                 user: null,
-                error: 'Your login session is invalid or has expired. Please log in again.'
+                error:
+                    'Your login session is invalid or has expired. Please log in again.'
             };
         }
 
@@ -189,7 +190,70 @@ async function reserveGeneration(accessToken) {
 
         return {
             allowed: false,
-            error: 'Could not connect to the generation limit system.'
+            error:
+                'Could not connect to the generation limit system.'
+        };
+    }
+}
+
+
+// ==========================================
+// OWNER DASHBOARD DATA
+// ==========================================
+
+async function getOwnerDashboard(accessToken) {
+
+    try {
+
+        const response = await fetch(
+            SUPABASE_URL + '/rest/v1/rpc/get_owner_dashboard',
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': 'Bearer ' + accessToken
+                },
+
+                body: JSON.stringify({})
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+
+            console.error(
+                'Owner dashboard error:',
+                data
+            );
+
+            return {
+                success: false,
+                error:
+                    data?.message ||
+                    data?.error ||
+                    'Could not load the owner dashboard.'
+            };
+        }
+
+        return {
+            success: true,
+            data: data
+        };
+
+    } catch (error) {
+
+        console.error(
+            'Owner dashboard request failed:',
+            error
+        );
+
+        return {
+            success: false,
+            error:
+                'Could not connect to the owner dashboard.'
         };
     }
 }
@@ -284,7 +348,7 @@ app.post('/generate', async (req, res) => {
 
 
         // --------------------------------------
-        // SECURE 3-PER-DAY CHECK
+        // SECURE GENERATION CHECK
         // --------------------------------------
 
         const reservation =
@@ -302,7 +366,7 @@ app.post('/generate', async (req, res) => {
 
 
         // --------------------------------------
-        // Generate the AI content
+        // Generate AI content
         // --------------------------------------
 
         const prompt =
@@ -364,7 +428,7 @@ app.post('/generate', async (req, res) => {
 
 
         // --------------------------------------
-        // Extract generated content
+        // Extract content
         // --------------------------------------
 
         const content =
@@ -401,7 +465,6 @@ app.post('/generate', async (req, res) => {
 
         });
 
-
     } catch (error) {
 
         console.error(
@@ -414,6 +477,81 @@ app.post('/generate', async (req, res) => {
             error:
                 error?.message ||
                 'Something went wrong while generating your post.'
+
+        });
+    }
+});
+
+
+// ==========================================
+// OWNER DASHBOARD ROUTE
+// ==========================================
+
+app.get('/owner-dashboard', async (req, res) => {
+
+    try {
+
+        const authorization =
+            req.headers.authorization || '';
+
+        const accessToken =
+            authorization.startsWith('Bearer ')
+                ? authorization.substring(7)
+                : null;
+
+
+        // --------------------------------------
+        // Verify login
+        // --------------------------------------
+
+        const authResult =
+            await getAuthenticatedUser(accessToken);
+
+        if (!authResult.user) {
+
+            return res.status(401).json({
+                error: authResult.error
+            });
+        }
+
+
+        // --------------------------------------
+        // Get owner dashboard
+        // --------------------------------------
+
+        const dashboard =
+            await getOwnerDashboard(accessToken);
+
+
+        if (!dashboard.success) {
+
+            return res.status(403).json({
+                error:
+                    dashboard.error ||
+                    'Access denied.'
+            });
+        }
+
+
+        // --------------------------------------
+        // Return dashboard
+        // --------------------------------------
+
+        return res.json(
+            dashboard.data
+        );
+
+    } catch (error) {
+
+        console.error(
+            'Owner dashboard route error:',
+            error
+        );
+
+        return res.status(500).json({
+
+            error:
+                'Something went wrong while loading the owner dashboard.'
 
         });
     }
