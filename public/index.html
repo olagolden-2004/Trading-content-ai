@@ -531,7 +531,53 @@ async function generate() {
 
         return;
     }
+    
+// CHECK DAILY FREE GENERATION LIMIT
+const today = new Date();
 
+const start =
+    new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+    ).toISOString();
+
+const { count, error: countError } =
+    await supabaseClient
+        .from("generation_history")
+        .select("*", {
+            count: "exact",
+            head: true
+        })
+        .eq("user_id", user.id)
+        .gte("created_at", start);
+
+if (countError) {
+
+    console.error(countError);
+
+    output.className = "error";
+
+    output.innerText =
+        "Unable to check your daily generation limit. Please try again.";
+
+    return;
+}
+
+const usedToday = count || 0;
+
+if (usedToday >= 3) {
+
+    output.className = "error";
+
+    output.innerText =
+        "🚫 You have used all 3 free generations for today. Please come back tomorrow.";
+
+    document.getElementById("remaining")
+        .innerText = "0";
+
+    return;
+    }
 
     
 
