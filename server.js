@@ -66,87 +66,92 @@ USER REQUEST:
 `;
 
 
-/* =========================================================
-   SUPABASE CONFIGURATION
-   ========================================================= */
+/* ==========================================
+   VERIFY SUPABASE LOGIN
+   ========================================== */
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY;
+async function getAuthenticatedUser(req) {
 
+  const authorization = req.headers.authorization;
 
-/* =========================================================
-   VERIFY SUPABASE USER
-   ========================================================= */
-
-async function getSupabaseUser(accessToken) {
-
-  if (!accessToken) {
+  if (!authorization) {
     return null;
   }
 
-  const response = await fetch(
-    `${SUPABASE_URL}/auth/v1/user`,
-    {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'apikey': SUPABASE_SERVICE_ROLE_KEY
+  if (!authorization.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authorization.substring(7);
+
+  if (!token) {
+    return null;
+  }
+
+  if (!process.env.SUPABASE_URL) {
+    console.error('SUPABASE_URL is missing.');
+    return null;
+  }
+
+  if (!process.env.SUPABASE_ANON_KEY) {
+    console.error('SUPABASE_ANON_KEY is missing.');
+    return null;
+  }
+
+  try {
+
+    const response = await fetch(
+      process.env.SUPABASE_URL + '/auth/v1/user',
+      {
+        method: 'GET',
+
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'apikey': process.env.SUPABASE_ANON_KEY
+        }
       }
-    }
-  );
+    );
 
-  if (!response.ok) {
+    if (!response.ok) {
+      console.error(
+        'Supabase authentication failed:',
+        response.status
+      );
+
+      return null;
+    }
+
+    const user = await response.json();
+
+    if (!user || !user.id) {
+      return null;
+    }
+
+    return user;
+
+  } catch (error) {
+
+    console.error(
+      'Authentication verification error:',
+      error
+    );
+
     return null;
   }
-
-  return await response.json();
 }
 
 
-/* =========================================================
+/* ==========================================
    GENERATE POST
-   ========================================================= */
+   ========================================== */
 
 app.post('/generate', async (req, res) => {
 
   try {
 
-    const { topic } = req.body;
+    const user = await getAuthenticatedUser(req);
 
-    if (!topic || typeof topic !== 'string' || topic.trim() === '') {
-
-      return res.status(400).json({
-        error: 'Please enter a topic or idea first.'
-      });
-
-    }
-
-
-    /* -----------------------------------------------------
-       CHECK SUPABASE CONFIGURATION
-       ----------------------------------------------------- */
-
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-
-      console.error(
-        'Supabase server environment variables are missing.'
-      );
-
-      return res.status(500).json({
-        error: 'The server authentication system is not configured yet.'
-      });
-
-    }
-
-
-    /* -----------------------------------------------------
-       GET LOGIN TOKEN
-       ----------------------------------------------------- */
-
-    const authHeader = req.headers.authorization || '';
-
-    if (!authHeader.startsWith('Bearer ')) {
+    if (!user) {
 
       return res.status(401).json({
         error: 'Please log in before generating a post.'
@@ -154,29 +159,21 @@ app.post('/generate', async (req, res) => {
 
     }
 
-    const accessToken =
-      authHeader.substring('Bearer '.length).trim();
 
+    const { topic } = req.body;
 
-    /* -----------------------------------------------------
-       VERIFY USER
-       ----------------------------------------------------- */
+    if (
+      !topic ||
+      typeof topic !== 'string' ||
+      topic.trim() === ''
+    ) {
 
-    const user =
-      await getSupabaseUser(accessToken);
-
-    if (!user || !user.id) {
-
-      return res.status(401).json({
-        error: 'Your login session is invalid or expired. Please log in again.'
+      return res.status(400).json({
+        error: 'Please enter a topic or idea first.'
       });
 
     }
 
-
-    /* -----------------------------------------------------
-       CHECK GEMINI CONFIGURATION
-       ----------------------------------------------------- */
 
     if (!process.env.GEMINI_API_KEY) {
 
@@ -192,135 +189,57 @@ app.post('/generate', async (req, res) => {
     }
 
 
-    /* -----------------------------------------------------
-       CHECK + USE DAILY GENERATION
-       ----------------------------------------------------- */
-
-    const generationResponse =
-      await fetch(
-        `${SUPABASE_URL}/rest/v1/rpc/use_generation`,
-        {
-          method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_SERVICE_ROLE_KEY,
-            'Authorization':
-              `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
-          },
-
-          body: JSON.stringify({
-            requested_topic: topic.trim()
-          })
-        }
-      );
-
-
-    const generationResult =
-      await generationResponse.json();
-
-
-    if (!generationResponse.ok) {
-
-      console.error(
-        'Supabase generation error:',
-        generationResult
-      );
-
-      return res.status(500).json({
-        error:
-          'Could not check your daily generation limit. Please try again.'
-      });
-
-    }
-
-
-    if (!generationResult.allowed) {
-
-      if (
-        generationResult.reason ===
-        'DAILY_LIMIT_REACHED'
-      ) {
-
-        return res.status(429).json({
-
-          error:
-            "You've used all 3 free generations for today. Come back tomorrow.",
-
-          used:
-            generationResult.used || 3,
-
-          remaining: 0
-
-        });
-
-      }
-
-
-      return res.status(401).json({
-        error: 'Please log in before generating a post.'
-      });
-
-    }
-
-
-    /* -----------------------------------------------------
-       GENERATE WITH GEMINI
-       ----------------------------------------------------- */
-
     const prompt =
-      AI_PROMPT + topic.trim();
+      AI_PROMPT + '\n' + topic.trim();
 
 
-    const geminiResponse =
-      await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
-        encodeURIComponent(
-          process.env.GEMINI_API_KEY
-        ),
-        {
-          method: 'POST',
+    const response = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
+      encodeURIComponent(
+        process.env.GEMINI_API_KEY
+      ),
+      {
 
-          headers: {
-            'Content-Type':
-              'application/json'
-          },
+        method: 'POST',
 
-          body: JSON.stringify({
+        headers: {
+          'Content-Type': 'application/json'
+        },
 
-            contents: [
+        body: JSON.stringify({
 
-              {
-                parts: [
+          contents: [
 
-                  {
-                    text: prompt
-                  }
+            {
+              parts: [
 
-                ]
-              }
+                {
+                  text: prompt
+                }
 
-            ],
-
-            generationConfig: {
-
-              temperature: 0.8,
-
-              maxOutputTokens: 1200
-
+              ]
             }
 
-          })
+          ],
 
-        }
-      );
+          generationConfig: {
+
+            temperature: 0.8,
+
+            maxOutputTokens: 1200
+
+          }
+
+        })
+
+      }
+    );
 
 
-    const data =
-      await geminiResponse.json();
+    const data = await response.json();
 
 
-    if (!geminiResponse.ok) {
+    if (!response.ok) {
 
       console.error(
         'Gemini API error:',
@@ -328,7 +247,7 @@ app.post('/generate', async (req, res) => {
       );
 
       return res.status(
-        geminiResponse.status
+        response.status
       ).json({
 
         error:
@@ -340,13 +259,11 @@ app.post('/generate', async (req, res) => {
     }
 
 
-    /* -----------------------------------------------------
-       GET GENERATED CONTENT
-       ----------------------------------------------------- */
-
     const content =
       data?.candidates?.[0]?.content?.parts
-        ?.map(part => part.text || '')
+        ?.map(
+          part => part.text || ''
+        )
         .join('')
         .trim();
 
@@ -368,84 +285,14 @@ app.post('/generate', async (req, res) => {
     }
 
 
-    /* -----------------------------------------------------
-       SAVE GENERATION HISTORY
-       ----------------------------------------------------- */
-
-    const historyResponse =
-      await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_history`,
-        {
-          method: 'POST',
-
-          headers: {
-
-            'Content-Type':
-              'application/json',
-
-            'apikey':
-              SUPABASE_SERVICE_ROLE_KEY,
-
-            'Authorization':
-              `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-
-            'Prefer':
-              'return=minimal'
-
-          },
-
-          body: JSON.stringify({
-
-            user_id:
-              user.id,
-
-            topic:
-              topic.trim(),
-
-            content:
-              content
-
-          })
-
-        }
-      );
-
-
-    if (!historyResponse.ok) {
-
-      const historyError =
-        await historyResponse.text();
-
-      console.error(
-        'History save error:',
-        historyError
-      );
-
-      // The generation itself succeeded,
-      // so we still return the content.
-    }
-
-
-    /* -----------------------------------------------------
-       SUCCESS
-       ----------------------------------------------------- */
-
     res.json({
 
-      content:
-        content,
-
-      used:
-        generationResult.used,
-
-      remaining:
-        generationResult.remaining
+      content: content
 
     });
 
-  }
 
-  catch (error) {
+  } catch (error) {
 
     console.error(
       'Server error:',
@@ -465,9 +312,9 @@ app.post('/generate', async (req, res) => {
 });
 
 
-/* =========================================================
+/* ==========================================
    HEALTH CHECK
-   ========================================================= */
+   ========================================== */
 
 app.get('/health', (req, res) => {
 
@@ -483,9 +330,9 @@ app.get('/health', (req, res) => {
 });
 
 
-/* =========================================================
+/* ==========================================
    START SERVER
-   ========================================================= */
+   ========================================== */
 
 const PORT =
   process.env.PORT || 3000;
