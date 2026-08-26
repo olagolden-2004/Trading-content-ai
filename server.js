@@ -147,7 +147,8 @@ async function getAuthenticatedUser(accessToken) {
 
         return {
             user: null,
-            error: 'Please log in before using TradeContentAI.'
+            error:
+                'Please log in before using TradeContentAI.'
         };
     }
 
@@ -439,6 +440,99 @@ async function generateWithGemini(topic) {
 
 
 // ============================================================
+// SAVE SUCCESSFUL GENERATION
+// ============================================================
+
+async function saveGeneration(
+    accessToken,
+    userId,
+    topic,
+    content
+) {
+
+    if (
+        !SUPABASE_URL ||
+        !SUPABASE_ANON_KEY ||
+        !accessToken ||
+        !userId ||
+        !topic ||
+        !content
+    ) {
+
+        return {
+            success: false,
+            error:
+                'Generation save information is incomplete.'
+        };
+    }
+
+    try {
+
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/rpc/save_generation`,
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${accessToken}`
+                },
+
+                body: JSON.stringify({
+                    p_user_id: userId,
+                    p_topic: topic,
+                    p_content: content
+                })
+            }
+        );
+
+        let data = null;
+
+        try {
+            data = await response.json();
+        } catch {
+            data = null;
+        }
+
+        if (!response.ok) {
+
+            console.error(
+                'save_generation error:',
+                data
+            );
+
+            return {
+                success: false,
+                error:
+                    data?.message ||
+                    data?.error ||
+                    'Could not save the generated post.'
+            };
+        }
+
+        return {
+            success: true,
+            data
+        };
+
+    } catch (error) {
+
+        console.error(
+            'save_generation request failed:',
+            error
+        );
+
+        return {
+            success: false,
+            error:
+                'Could not connect to the generation history system.'
+        };
+    }
+}
+
+
+// ============================================================
 // OWNER DASHBOARD DATA
 // ============================================================
 
@@ -549,12 +643,8 @@ app.get('/owner-dashboard', async (req, res) => {
         }
 
         return res.json({
-
             success: true,
-
-            dashboard:
-                dashboard.data
-
+            dashboard: dashboard.data
         });
 
     } catch (error) {
@@ -565,9 +655,7 @@ app.get('/owner-dashboard', async (req, res) => {
         );
 
         return res.status(500).json({
-
             success: false,
-
             error:
                 'Something went wrong loading the owner dashboard.'
         });
@@ -584,7 +672,7 @@ app.post('/generate', async (req, res) => {
     try {
 
         // ------------------------------------------------------
-        // Check server configuration
+        // CHECK SERVER CONFIGURATION
         // ------------------------------------------------------
 
         const missingConfig =
@@ -598,9 +686,7 @@ app.post('/generate', async (req, res) => {
             );
 
             return res.status(500).json({
-
                 success: false,
-
                 error:
                     'The server is not fully configured. Missing: ' +
                     missingConfig.join(', ')
@@ -609,7 +695,7 @@ app.post('/generate', async (req, res) => {
 
 
         // ------------------------------------------------------
-        // Validate request body
+        // VALIDATE REQUEST
         // ------------------------------------------------------
 
         const topic =
@@ -617,29 +703,20 @@ app.post('/generate', async (req, res) => {
                 ? req.body.topic.trim()
                 : '';
 
-
         if (!topic) {
 
             return res.status(400).json({
-
                 success: false,
-
                 error:
                     'Please enter a topic or idea first.'
             });
         }
 
 
-        // ------------------------------------------------------
-        // Protect against excessively large topics
-        // ------------------------------------------------------
-
         if (topic.length > 5000) {
 
             return res.status(400).json({
-
                 success: false,
-
                 error:
                     'Your topic is too long. Please keep it under 5,000 characters.'
             });
@@ -647,7 +724,7 @@ app.post('/generate', async (req, res) => {
 
 
         // ------------------------------------------------------
-        // Get access token
+        // GET ACCESS TOKEN
         // ------------------------------------------------------
 
         const accessToken =
@@ -655,7 +732,7 @@ app.post('/generate', async (req, res) => {
 
 
         // ------------------------------------------------------
-        // Verify logged-in user
+        // VERIFY LOGIN
         // ------------------------------------------------------
 
         const authResult =
@@ -664,9 +741,7 @@ app.post('/generate', async (req, res) => {
         if (!authResult.user) {
 
             return res.status(401).json({
-
                 success: false,
-
                 error:
                     authResult.error
             });
@@ -674,16 +749,15 @@ app.post('/generate', async (req, res) => {
 
 
         // ------------------------------------------------------
-        // Reserve generation
+        // RESERVE ONE GENERATION
+        //
+        // reserve_generation() is the single source of truth
+        // for the daily generation limit.
         // ------------------------------------------------------
 
         const reservation =
             await reserveGeneration(accessToken);
 
-
-        // ------------------------------------------------------
-        // User has no generation available
-        // ------------------------------------------------------
 
         if (!reservation?.allowed) {
 
@@ -710,7 +784,7 @@ app.post('/generate', async (req, res) => {
 
 
         // ------------------------------------------------------
-        // Generate AI content
+        // GENERATE AI CONTENT
         // ------------------------------------------------------
 
         const aiResult =
@@ -718,22 +792,17 @@ app.post('/generate', async (req, res) => {
 
 
         // ------------------------------------------------------
-        // Gemini failed
+        // GEMINI FAILED
         // ------------------------------------------------------
 
         if (!aiResult.success) {
 
             /*
-             * IMPORTANT:
+             * The generation has already been reserved.
              *
-             * reserve_generation() has already reserved the
-             * generation at this point.
-             *
-             * We do NOT pretend to refund it here because the
-             * current database function does not provide a
-             * cancellation/refund operation.
-             *
-             * We will add that safely on the Supabase side next.
+             * We do not attempt a fake refund here.
+             * A safe refund/cancellation function can be added
+             * separately later.
              */
 
             return res.status(
@@ -757,69 +826,48 @@ app.post('/generate', async (req, res) => {
 
 
         // ------------------------------------------------------
-        // Successful generation
+        // SAVE SUCCESSFUL POST
+        //
+        // This saves the generated content/history.
+        // It does NOT replace reserve_generation() as the
+        // generation-limit system.
         // ------------------------------------------------------
 
-        // ------------------------------------------------------
-// SAVE SUCCESSFUL GENERATION
-// ------------------------------------------------------
+        const saved =
+            await saveGeneration(
+                accessToken,
+                authResult.user.id,
+                topic,
+                aiResult.content
+            );
 
-try {
 
-    const saveResponse = await fetch(
-        `${SUPABASE_URL}/rest/v1/rpc/save_generation`,
-        {
-            method: 'POST',
+        if (!saved.success) {
 
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${accessToken}`
-            },
+            console.error(
+                'Generated post could not be saved:',
+                saved.error
+            );
 
-            body: JSON.stringify({
-                p_user_id: authResult.user.id,
-                p_topic: topic,
-                p_content: aiResult.content
-            })
+            return res.status(500).json({
+
+                success: false,
+
+                error:
+                    'The post was generated, but we could not save it. Please try again.',
+
+                generation_reserved: true,
+
+                remaining:
+                    reservation.remaining ?? null
+            });
         }
-    );
 
-    let saveData = null;
 
-    try {
-        saveData = await saveResponse.json();
-    } catch {
-        saveData = null;
-    }
+        // ------------------------------------------------------
+        // SUCCESS
+        // ------------------------------------------------------
 
-    if (!saveResponse.ok) {
-
-        console.error(
-            'save_generation error:',
-            saveData
-        );
-
-        return res.status(500).json({
-            success: false,
-            error:
-                'The post was generated, but we could not save your generation count. Please try again.'
-        });
-    }
-
-} catch (error) {
-
-    console.error(
-        'save_generation request failed:',
-        error
-    );
-
-    return res.status(500).json({
-        success: false,
-        error:
-            'The post was generated, but we could not save your generation count.'
-    });
-}
         return res.status(200).json({
 
             success: true,
@@ -917,6 +965,7 @@ app.use('/',
         if (
             req.path.startsWith('/api/')
         ) {
+
             return res.status(404).json({
 
                 success: false,
