@@ -25,9 +25,7 @@
             margin: auto;
         }
 
-        input,
-        textarea,
-        button {
+        input, textarea, button {
             width: 100%;
             padding: 15px;
             margin: 8px 0;
@@ -37,8 +35,7 @@
             box-sizing: border-box;
         }
 
-        input,
-        textarea {
+        input, textarea {
             background: #1a1a1a;
             color: white;
             border: 1px solid #333;
@@ -131,14 +128,6 @@
             font-weight: bold;
         }
 
-        .limit-box {
-            background: #151515;
-            border: 1px solid #333;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 15px;
-        }
-
     </style>
 
 </head>
@@ -148,9 +137,9 @@
 <h1>🔥 TradeContentAI</h1>
 
 
-<!-- ========================================================= -->
+<!-- ============================= -->
 <!-- AUTH SCREEN -->
-<!-- ========================================================= -->
+<!-- ============================= -->
 
 <div id="authScreen" class="box">
 
@@ -228,9 +217,9 @@
 
 
 
-<!-- ========================================================= -->
+<!-- ============================= -->
 <!-- MAIN APP -->
-<!-- ========================================================= -->
+<!-- ============================= -->
 
 <div id="appScreen" class="hidden">
 
@@ -244,7 +233,7 @@
 
                 Free generations remaining:
 
-                <span id="remaining">3</span>
+                <span id="remaining">Checking...</span>
 
             </div>
 
@@ -283,20 +272,6 @@
     </button>
 
 
-    <div
-        id="limitBox"
-        class="limit-box hidden">
-
-        <strong>Daily limit reached.</strong>
-
-        <div class="small">
-            Your free generations have been used for today.
-            You can come back tomorrow.
-        </div>
-
-    </div>
-
-
     <div id="output"></div>
 
 </div>
@@ -306,9 +281,9 @@
 <script>
 
 
-// =========================================================
+// ==========================================
 // SUPABASE CONFIG
-// =========================================================
+// ==========================================
 
 const SUPABASE_URL =
     "https://rbccdpbzpkexbjvxoqum.supabase.co";
@@ -324,9 +299,10 @@ const supabaseClient =
     );
 
 
-// =========================================================
+
+// ==========================================
 // SHOW LOGIN
-// =========================================================
+// ==========================================
 
 function showLogin() {
 
@@ -345,9 +321,10 @@ function showLogin() {
 }
 
 
-// =========================================================
+
+// ==========================================
 // SHOW SIGNUP
-// =========================================================
+// ==========================================
 
 function showSignup() {
 
@@ -366,9 +343,10 @@ function showSignup() {
 }
 
 
-// =========================================================
+
+// ==========================================
 // CREATE ACCOUNT
-// =========================================================
+// ==========================================
 
 async function signup() {
 
@@ -427,10 +405,7 @@ async function signup() {
 
     try {
 
-        const {
-            data,
-            error
-        } =
+        const { data, error } =
             await supabaseClient.auth.signUp({
 
                 email: email,
@@ -441,7 +416,9 @@ async function signup() {
 
 
         if (error) {
+
             throw error;
+
         }
 
 
@@ -496,9 +473,10 @@ async function signup() {
 }
 
 
-// =========================================================
+
+// ==========================================
 // LOGIN
-// =========================================================
+// ==========================================
 
 async function login() {
 
@@ -545,10 +523,7 @@ async function login() {
 
     try {
 
-        const {
-            data,
-            error
-        } =
+        const { data, error } =
             await supabaseClient.auth.signInWithPassword({
 
                 email: email,
@@ -559,11 +534,6 @@ async function login() {
 
 
         if (error) {
-
-            console.error(
-                "Supabase login error:",
-                error
-            );
 
             throw error;
 
@@ -615,9 +585,10 @@ async function login() {
 }
 
 
-// =========================================================
+
+// ==========================================
 // LOGOUT
-// =========================================================
+// ==========================================
 
 async function logout() {
 
@@ -639,9 +610,10 @@ async function logout() {
 }
 
 
-// =========================================================
+
+// ==========================================
 // SHOW APP
-// =========================================================
+// ==========================================
 
 async function showApp(user) {
 
@@ -660,27 +632,39 @@ async function showApp(user) {
 
     document
         .getElementById("userEmail")
-        .innerText =
-            user.email || "";
+        .innerText = user.email;
 
 
-    await updateRemaining();
+    /*
+     * IMPORTANT:
+     *
+     * We no longer count rows directly from
+     * generation_requests here.
+     *
+     * The server is now the authority for the
+     * generation limit.
+     *
+     * Therefore we do NOT display a fake "3".
+     */
+
+    document
+        .getElementById("remaining")
+        .innerText = "Checking...";
 
 }
 
 
-// =========================================================
+
+// ==========================================
 // CHECK CURRENT USER
-// =========================================================
+// ==========================================
 
 async function checkUser() {
 
     try {
 
         const {
-            data: {
-                user
-            },
+            data: { user },
             error
         } =
             await supabaseClient.auth.getUser();
@@ -728,61 +712,106 @@ async function checkUser() {
 }
 
 
-// =========================================================
-// UPDATE GENERATION DISPLAY
-//
-// IMPORTANT:
-// The browser no longer directly counts rows from
-// generation_requests.
-//
-// The server/Supabase reserve_generation() system is now
-// responsible for deciding whether a generation is allowed.
-// =========================================================
 
-async function updateRemaining() {
+// ==========================================
+// UPDATE REMAINING FROM SERVER RESPONSE
+// ==========================================
+
+function updateRemainingFromServer(data) {
+
+    const remainingElement =
+        document.getElementById("remaining");
+
+    if (!remainingElement) return;
+
+
+    if (
+        data &&
+        typeof data.remaining !== "undefined" &&
+        data.remaining !== null
+    ) {
+
+        const remaining =
+            Number(data.remaining);
+
+
+        if (Number.isFinite(remaining)) {
+
+            remainingElement.innerText =
+                Math.max(0, remaining);
+
+
+            updateGenerateButton(
+                Math.max(0, remaining)
+            );
+
+            return;
+
+        }
+
+    }
+
+
+    /*
+     * If the server did not send a number,
+     * do not invent one.
+     */
+
+    remainingElement.innerText =
+        "—";
+
+}
+
+
+
+// ==========================================
+// UPDATE GENERATE BUTTON
+// ==========================================
+
+function updateGenerateButton(remaining) {
 
     const button =
         document.getElementById(
             "generateButton"
         );
 
-    const limitBox =
-        document.getElementById(
-            "limitBox"
-        );
+
+    if (!button) return;
 
 
-    if (button) {
+    if (remaining <= 0) {
 
-        button.disabled = false;
+        button.innerText =
+            "🎬 Watch Ad to Get +1 Generation";
+
+    }
+
+    else {
 
         button.innerText =
             "Generate Post";
 
     }
 
-
-    if (limitBox) {
-
-        limitBox.classList.add(
-            "hidden"
-        );
-
-    }
-
 }
 
 
-// =========================================================
+
+// ==========================================
 // GENERATE BUTTON CLICK
-// =========================================================
+// ==========================================
 
 async function handleGenerateClick() {
 
+    const {
+        data: { user }
+    } =
+        await supabaseClient.auth.getUser();
+
+
     const output =
-        document.getElementById(
-            "output"
-        );
+        document.getElementById("output");
+
 
     const button =
         document.getElementById(
@@ -790,18 +819,9 @@ async function handleGenerateClick() {
         );
 
 
-    const {
-        data: {
-            user
-        }
-    } =
-        await supabaseClient.auth.getUser();
-
-
     if (!user) {
 
-        output.className =
-            "error";
+        output.className = "error";
 
         output.innerText =
             "Please log in first.";
@@ -811,17 +831,6 @@ async function handleGenerateClick() {
     }
 
 
-    await generate();
-
-}
-
-
-// =========================================================
-// GENERATE POST
-// =========================================================
-
-async function generate() {
-
     const topic =
         document
             .getElementById("topic")
@@ -829,28 +838,9 @@ async function generate() {
             .trim();
 
 
-    const output =
-        document.getElementById(
-            "output"
-        );
-
-
-    const button =
-        document.getElementById(
-            "generateButton"
-        );
-
-
-    const limitBox =
-        document.getElementById(
-            "limitBox"
-        );
-
-
     if (!topic) {
 
-        output.className =
-            "error";
+        output.className = "error";
 
         output.innerText =
             "Please enter a topic first.";
@@ -860,55 +850,21 @@ async function generate() {
     }
 
 
-    const {
-        data: {
-            user
-        }
-    } =
-        await supabaseClient.auth.getUser();
-
-
-    if (!user) {
-
-        output.className =
-            "error";
-
-        output.innerText =
-            "Please log in first.";
-
-        return;
-
-    }
-
-
     output.className =
         "success";
 
+
     output.innerText =
-        "Generating your post...";
+        "Checking your generation limit...";
 
 
     button.disabled = true;
-
-    button.innerText =
-        "Generating...";
-
-
-    if (limitBox) {
-
-        limitBox.classList.add(
-            "hidden"
-        );
-
-    }
 
 
     try {
 
         const {
-            data: {
-                session
-            }
+            data: { session }
         } =
             await supabaseClient.auth.getSession();
 
@@ -922,7 +878,11 @@ async function generate() {
         }
 
 
-        const response =
+        output.innerText =
+            "Generating your post...";
+
+
+        const res =
             await fetch(
                 "/generate",
                 {
@@ -952,11 +912,10 @@ async function generate() {
 
         let data = null;
 
-
         try {
 
             data =
-                await response.json();
+                await res.json();
 
         }
 
@@ -967,44 +926,36 @@ async function generate() {
         }
 
 
-        // =====================================================
-        // DAILY LIMIT REACHED
-        // =====================================================
+        /*
+         * ALWAYS update the displayed count
+         * using the server's answer.
+         */
 
-        if (
-            response.status === 429
-        ) {
+        updateRemainingFromServer(data);
+
+
+        // ==================================
+        // DAILY LIMIT REACHED
+        // ==================================
+
+        if (res.status === 429) {
 
             output.className =
                 "error";
 
             output.innerText =
-                data?.error ||
-                "You have reached your daily generation limit.";
-
-            if (limitBox) {
-
-                limitBox.classList.remove(
-                    "hidden"
-                );
-
-            }
-
-            button.disabled = false;
-
-            button.innerText =
-                "Generate Post";
+                "You have used all your free generations for today. Please come back tomorrow.";
 
             return;
 
         }
 
 
-        // =====================================================
+        // ==================================
         // OTHER SERVER ERROR
-        // =====================================================
+        // ==================================
 
-        if (!response.ok) {
+        if (!res.ok) {
 
             throw new Error(
                 data?.error ||
@@ -1014,9 +965,9 @@ async function generate() {
         }
 
 
-        // =====================================================
+        // ==================================
         // SUCCESS
-        // =====================================================
+        // ==================================
 
         if (!data?.content) {
 
@@ -1030,6 +981,7 @@ async function generate() {
         output.className =
             "success";
 
+
         output.innerText =
             data.content;
 
@@ -1039,37 +991,18 @@ async function generate() {
             .value = "";
 
 
-        // -----------------------------------------------------
-        // Show the server's authoritative remaining count.
-        // -----------------------------------------------------
-
-        if (
-            typeof data.remaining !==
-            "undefined" &&
-            data.remaining !== null
-        ) {
-
-            document
-                .getElementById(
-                    "remaining"
-                )
-                .innerText =
-                    data.remaining;
-
-        }
-
-
     }
 
     catch (error) {
 
         console.error(
-            "Generate error:",
+            "Generation error:",
             error
         );
 
         output.className =
             "error";
+
 
         output.innerText =
             "❌ Error: " +
@@ -1081,13 +1014,32 @@ async function generate() {
 
         button.disabled = false;
 
+
+        /*
+         * Do not calculate the count in the browser.
+         *
+         * The server/database is responsible for
+         * the actual generation limit.
+         */
+
+        const remainingText =
+            document.getElementById(
+                "remaining"
+            ).innerText;
+
+
+        const remaining =
+            Number(remainingText);
+
+
         if (
-            button.innerText ===
-            "Generating..."
+            Number.isFinite(remaining) &&
+            remaining > 0
         ) {
 
-            button.innerText =
-                "Generate Post";
+            updateGenerateButton(
+                remaining
+            );
 
         }
 
@@ -1096,9 +1048,31 @@ async function generate() {
 }
 
 
-// =========================================================
+
+// ==========================================
+// REWARDED AD PLACEHOLDER
+// ==========================================
+
+function watchRewardedAd() {
+
+    const output =
+        document.getElementById("output");
+
+
+    output.className =
+        "success";
+
+
+    output.innerText =
+        "🎬 Rewarded ad system is being prepared. Please try again later.";
+
+}
+
+
+
+// ==========================================
 // START APPLICATION
-// =========================================================
+// ==========================================
 
 checkUser();
 
@@ -1106,4 +1080,4 @@ checkUser();
 </script>
 
 </body>
-</html>
+    </html>
