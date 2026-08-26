@@ -469,7 +469,7 @@ async function updateRemaining(userId) {
 
     const { count, error } =
         await supabaseClient
-            .from("generation_history")
+            .from("generation_requests")
             .select("*", {
                 count: "exact",
                 head: true
@@ -479,7 +479,10 @@ async function updateRemaining(userId) {
 
     if (error) {
 
-        console.error(error);
+        console.error(
+            "Unable to update generation counter:",
+            error
+        );
 
         return;
     }
