@@ -209,8 +209,8 @@
         placeholder="Example: 5 ways to grow an Instagram page"
     ></textarea>
 
-    <button id="generateButton" onclick="generate()">
-        Generate Post
+    <button id="generateButton" onclick="handleGenerateClick()">
+    Generate Post
     </button>
 
     <div id="output"></div>
@@ -662,6 +662,360 @@ if (usedToday >= 3) {
                 .innerText = data.remaining;
         }
 
+// ==========================================
+// DAILY GENERATION COUNT
+// ==========================================
+
+async function updateRemaining(userId) {
+
+    const today = new Date();
+
+    const start =
+        new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate()
+        ).toISOString();
+
+    const { count, error } =
+        await supabaseClient
+            .from("generation_requests")
+            .select("*", {
+                count: "exact",
+                head: true
+            })
+            .eq("user_id", userId)
+            .gte("created_at", start);
+
+    if (error) {
+
+        console.error(
+            "Unable to update generation counter:",
+            error
+        );
+
+        return;
+    }
+
+    const used = count || 0;
+
+    const remaining =
+        Math.max(0, 3 - used);
+
+    document.getElementById("remaining")
+        .innerText = remaining;
+
+    updateGenerateButton(remaining);
+}
+
+
+// ==========================================
+// UPDATE GENERATE BUTTON
+// ==========================================
+
+function updateGenerateButton(remaining) {
+
+    const button =
+        document.getElementById("generateButton");
+
+    if (!button) return;
+
+    if (remaining <= 0) {
+
+        button.innerText =
+            "🎬 Watch Ad to Get +1 Generation";
+
+        button.disabled = false;
+
+    } else {
+
+        button.innerText =
+            "Generate Post";
+
+        button.disabled = false;
+    }
+}
+
+
+// ==========================================
+// GENERATE BUTTON CLICK
+// ==========================================
+
+async function handleGenerateClick() {
+
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
+
+    if (!user) {
+
+        const output =
+            document.getElementById("output");
+
+        output.className = "error";
+
+        output.innerText =
+            "Please log in first.";
+
+        return;
+    }
+
+    const today = new Date();
+
+    const start =
+        new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate()
+        ).toISOString();
+
+    const { count, error } =
+        await supabaseClient
+            .from("generation_requests")
+            .select("*", {
+                count: "exact",
+                head: true
+            })
+            .eq("user_id", user.id)
+            .gte("created_at", start);
+
+    if (error) {
+
+        console.error(error);
+
+        document.getElementById("output")
+            .innerText =
+            "Unable to check your generation limit. Please try again.";
+
+        return;
+    }
+
+    const used = count || 0;
+
+    const remaining =
+        Math.max(0, 3 - used);
+
+    document.getElementById("remaining")
+        .innerText = remaining;
+
+    if (remaining <= 0) {
+
+        watchRewardedAd();
+
+        return;
+    }
+
+    generate();
+}
+
+
+// ==========================================
+// REWARDED AD
+// ==========================================
+
+function watchRewardedAd() {
+
+    const output =
+        document.getElementById("output");
+
+    output.className = "success";
+
+    output.innerText =
+        "🎬 Rewarded ads are being prepared. Please wait...";
+
+    /*
+     * IMPORTANT:
+     *
+     * We are NOT adding the +1 generation here yet.
+     *
+     * The real Google rewarded-ad system must first
+     * confirm that the user actually received the
+     * ad reward.
+     *
+     * We will connect this function to Google
+     * Ad Manager's rewardedSlotGranted event next.
+     */
+
+    setTimeout(() => {
+
+        output.innerText =
+            "The rewarded ad system is not connected yet. We are setting it up now.";
+
+    }, 1500);
+}
+
+
+// ==========================================
+// GENERATE POST
+// ==========================================
+
+async function generate() {
+
+    const topic =
+        document.getElementById("topic")
+            .value.trim();
+
+    const output =
+        document.getElementById("output");
+
+    const button =
+        document.getElementById("generateButton");
+
+    if (!topic) {
+
+        output.className = "error";
+
+        output.innerText =
+            "Please enter a topic first.";
+
+        return;
+    }
+
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
+
+    if (!user) {
+
+        output.className = "error";
+
+        output.innerText =
+            "Please log in first.";
+
+        return;
+    }
+
+    // ==========================================
+    // CHECK DAILY FREE GENERATION LIMIT
+    // ==========================================
+
+    const today = new Date();
+
+    const start =
+        new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate()
+        ).toISOString();
+
+    const {
+        count,
+        error: countError
+    } =
+        await supabaseClient
+            .from("generation_requests")
+            .select("*", {
+                count: "exact",
+                head: true
+            })
+            .eq("user_id", user.id)
+            .gte("created_at", start);
+
+    if (countError) {
+
+        console.error(countError);
+
+        output.className = "error";
+
+        output.innerText =
+            "Unable to check your daily generation limit. Please try again.";
+
+        return;
+    }
+
+    const usedToday = count || 0;
+
+    if (usedToday >= 3) {
+
+        document.getElementById("remaining")
+            .innerText = "0";
+
+        updateGenerateButton(0);
+
+        output.className = "error";
+
+        output.innerText =
+            "🚫 You have used all 3 free generations for today. Watch an ad to get +1 generation.";
+
+        return;
+    }
+
+
+    output.className = "success";
+
+    output.innerText =
+        "Generating your post...";
+
+    button.disabled = true;
+
+    button.innerText =
+        "Generating...";
+
+
+    try {
+
+        const {
+            data: { session }
+        } = await supabaseClient.auth.getSession();
+
+        if (!session) {
+
+            throw new Error(
+                "Your login session has expired. Please log in again."
+            );
+        }
+
+
+        const res = await fetch("/generate", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+
+                "Authorization":
+                    "Bearer " + session.access_token
+            },
+
+            body: JSON.stringify({
+                topic: topic
+            })
+
+        });
+
+
+        const data = await res.json();
+
+
+        if (!res.ok) {
+
+            throw new Error(
+                data.error ||
+                "The server could not generate your post."
+            );
+        }
+
+
+        if (!data.content) {
+
+            throw new Error(
+                "The AI returned no content. Please try again."
+            );
+        }
+
+
+        output.className = "success";
+
+        output.innerText =
+            data.content;
+
+
+        if (typeof data.remaining !== "undefined") {
+
+            document.getElementById("remaining")
+                .innerText = data.remaining;
+        }
+
 
         await updateRemaining(user.id);
 
@@ -683,11 +1037,9 @@ if (usedToday >= 3) {
 
         button.disabled = false;
 
-        button.innerText =
-            "Generate Another Post";
+        await updateRemaining(user.id);
     }
 }
-
 
 // ==========================================
 // START APPLICATION
