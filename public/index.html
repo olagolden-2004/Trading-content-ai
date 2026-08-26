@@ -233,7 +233,7 @@
 
                 Free generations remaining:
 
-                <span id="remaining">Checking...</span>
+                <span id="remaining">3</span>
 
             </div>
 
@@ -397,11 +397,6 @@ async function signup() {
     button.innerText =
         "Creating account...";
 
-    message.className = "success";
-
-    message.innerText =
-        "Creating your account...";
-
 
     try {
 
@@ -416,9 +411,7 @@ async function signup() {
 
 
         if (error) {
-
             throw error;
-
         }
 
 
@@ -515,11 +508,6 @@ async function login() {
     button.innerText =
         "Logging in...";
 
-    message.className = "success";
-
-    message.innerText =
-        "Checking your login...";
-
 
     try {
 
@@ -534,9 +522,7 @@ async function login() {
 
 
         if (error) {
-
             throw error;
-
         }
 
 
@@ -547,12 +533,6 @@ async function login() {
             );
 
         }
-
-
-        message.className = "success";
-
-        message.innerText =
-            "✅ Login successful.";
 
 
         await showApp(data.user);
@@ -632,24 +612,28 @@ async function showApp(user) {
 
     document
         .getElementById("userEmail")
-        .innerText = user.email;
+        .innerText =
+            user.email || "";
 
 
-    /*
-     * IMPORTANT:
-     *
-     * We no longer count rows directly from
-     * generation_requests here.
-     *
-     * The server is now the authority for the
-     * generation limit.
-     *
-     * Therefore we do NOT display a fake "3".
-     */
+    // IMPORTANT:
+    // We do NOT query generation_requests here.
+    // The server is now responsible for the real limit.
 
     document
         .getElementById("remaining")
-        .innerText = "Checking...";
+        .innerText = "3";
+
+
+    document
+        .getElementById("generateButton")
+        .disabled = false;
+
+
+    document
+        .getElementById("generateButton")
+        .innerText =
+            "Generate Post";
 
 }
 
@@ -714,90 +698,6 @@ async function checkUser() {
 
 
 // ==========================================
-// UPDATE REMAINING FROM SERVER RESPONSE
-// ==========================================
-
-function updateRemainingFromServer(data) {
-
-    const remainingElement =
-        document.getElementById("remaining");
-
-    if (!remainingElement) return;
-
-
-    if (
-        data &&
-        typeof data.remaining !== "undefined" &&
-        data.remaining !== null
-    ) {
-
-        const remaining =
-            Number(data.remaining);
-
-
-        if (Number.isFinite(remaining)) {
-
-            remainingElement.innerText =
-                Math.max(0, remaining);
-
-
-            updateGenerateButton(
-                Math.max(0, remaining)
-            );
-
-            return;
-
-        }
-
-    }
-
-
-    /*
-     * If the server did not send a number,
-     * do not invent one.
-     */
-
-    remainingElement.innerText =
-        "—";
-
-}
-
-
-
-// ==========================================
-// UPDATE GENERATE BUTTON
-// ==========================================
-
-function updateGenerateButton(remaining) {
-
-    const button =
-        document.getElementById(
-            "generateButton"
-        );
-
-
-    if (!button) return;
-
-
-    if (remaining <= 0) {
-
-        button.innerText =
-            "🎬 Watch Ad to Get +1 Generation";
-
-    }
-
-    else {
-
-        button.innerText =
-            "Generate Post";
-
-    }
-
-}
-
-
-
-// ==========================================
 // GENERATE BUTTON CLICK
 // ==========================================
 
@@ -814,9 +714,7 @@ async function handleGenerateClick() {
 
 
     const button =
-        document.getElementById(
-            "generateButton"
-        );
+        document.getElementById("generateButton");
 
 
     if (!user) {
@@ -853,12 +751,14 @@ async function handleGenerateClick() {
     output.className =
         "success";
 
-
     output.innerText =
-        "Checking your generation limit...";
+        "Checking your generation availability...";
 
 
     button.disabled = true;
+
+    button.innerText =
+        "Checking...";
 
 
     try {
@@ -876,10 +776,6 @@ async function handleGenerateClick() {
             );
 
         }
-
-
-        output.innerText =
-            "Generating your post...";
 
 
         const res =
@@ -914,46 +810,58 @@ async function handleGenerateClick() {
 
         try {
 
-            data =
-                await res.json();
+            data = await res.json();
 
-        }
-
-        catch {
+        } catch {
 
             data = null;
 
         }
 
 
-        /*
-         * ALWAYS update the displayed count
-         * using the server's answer.
-         */
-
-        updateRemainingFromServer(data);
-
-
-        // ==================================
+        // ======================================
         // DAILY LIMIT REACHED
-        // ==================================
+        // ======================================
 
-        if (res.status === 429) {
+        if (
+            res.status === 429
+        ) {
+
+            const remaining =
+                Number.isFinite(
+                    Number(data?.remaining)
+                )
+                    ? Number(data.remaining)
+                    : 0;
+
+
+            document
+                .getElementById("remaining")
+                .innerText =
+                    remaining;
+
+
+            button.innerText =
+                "🎬 Watch Ad to Get +1 Generation";
+
 
             output.className =
                 "error";
 
+
             output.innerText =
-                "You have used all your free generations for today. Please come back tomorrow.";
+                data?.error ||
+                "You have reached your daily generation limit. Please come back tomorrow.";
+
 
             return;
 
         }
 
 
-        // ==================================
+        // ======================================
         // OTHER SERVER ERROR
-        // ==================================
+        // ======================================
 
         if (!res.ok) {
 
@@ -965,9 +873,9 @@ async function handleGenerateClick() {
         }
 
 
-        // ==================================
+        // ======================================
         // SUCCESS
-        // ==================================
+        // ======================================
 
         if (!data?.content) {
 
@@ -986,9 +894,42 @@ async function handleGenerateClick() {
             data.content;
 
 
+        // Server is the authority for the
+        // remaining generation count.
+
+        if (
+            typeof data.remaining !==
+            "undefined"
+        ) {
+
+            document
+                .getElementById("remaining")
+                .innerText =
+                    data.remaining;
+
+        }
+
+
         document
             .getElementById("topic")
             .value = "";
+
+
+        if (
+            Number(data.remaining) <= 0
+        ) {
+
+            button.innerText =
+                "🎬 Watch Ad to Get +1 Generation";
+
+        }
+
+        else {
+
+            button.innerText =
+                "Generate Post";
+
+        }
 
 
     }
@@ -1000,6 +941,7 @@ async function handleGenerateClick() {
             error
         );
 
+
         output.className =
             "error";
 
@@ -1008,63 +950,17 @@ async function handleGenerateClick() {
             "❌ Error: " +
             error.message;
 
+
+        button.innerText =
+            "Generate Post";
+
     }
 
     finally {
 
         button.disabled = false;
 
-
-        /*
-         * Do not calculate the count in the browser.
-         *
-         * The server/database is responsible for
-         * the actual generation limit.
-         */
-
-        const remainingText =
-            document.getElementById(
-                "remaining"
-            ).innerText;
-
-
-        const remaining =
-            Number(remainingText);
-
-
-        if (
-            Number.isFinite(remaining) &&
-            remaining > 0
-        ) {
-
-            updateGenerateButton(
-                remaining
-            );
-
-        }
-
     }
-
-}
-
-
-
-// ==========================================
-// REWARDED AD PLACEHOLDER
-// ==========================================
-
-function watchRewardedAd() {
-
-    const output =
-        document.getElementById("output");
-
-
-    output.className =
-        "success";
-
-
-    output.innerText =
-        "🎬 Rewarded ad system is being prepared. Please try again later.";
 
 }
 
@@ -1080,4 +976,4 @@ checkUser();
 </script>
 
 </body>
-    </html>
+            </html>
