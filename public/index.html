@@ -353,6 +353,9 @@ async function login() {
     const message =
         document.getElementById("authMessage");
 
+    const loginButton =
+        document.querySelector("#loginForm button");
+
     if (!email || !password) {
 
         message.className = "error";
@@ -363,29 +366,76 @@ async function login() {
         return;
     }
 
+    loginButton.disabled = true;
+
+    loginButton.innerText =
+        "Logging in...";
+
     message.className = "success";
 
     message.innerText =
-        "Logging in...";
+        "Checking your login...";
 
-    const { data, error } =
-        await supabaseClient.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
+    try {
 
-    if (error) {
+        const { data, error } =
+            await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+        if (error) {
+
+            console.error(
+                "Supabase login error:",
+                error
+            );
+
+            message.className = "error";
+
+            message.innerText =
+                "Login failed: " + error.message;
+
+            return;
+        }
+
+        if (!data.user) {
+
+            message.className = "error";
+
+            message.innerText =
+                "Login failed. No user account was returned.";
+
+            return;
+        }
+
+        message.className = "success";
+
+        message.innerText =
+            "✅ Login successful. Loading your app...";
+
+        await showApp(data.user);
+
+    } catch (error) {
+
+        console.error(
+            "Unexpected login error:",
+            error
+        );
 
         message.className = "error";
 
         message.innerText =
-            error.message;
+            "❌ Login error: " + error.message;
 
-        return;
+    } finally {
+
+        loginButton.disabled = false;
+
+        loginButton.innerText =
+            "Log In";
     }
-
-    showApp(data.user);
-}
+    }
 
 
 // ==========================================
