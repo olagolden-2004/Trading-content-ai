@@ -760,6 +760,66 @@ app.post('/generate', async (req, res) => {
         // Successful generation
         // ------------------------------------------------------
 
+        // ------------------------------------------------------
+// SAVE SUCCESSFUL GENERATION
+// ------------------------------------------------------
+
+try {
+
+    const saveResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/save_generation`,
+        {
+            method: 'POST',
+
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${accessToken}`
+            },
+
+            body: JSON.stringify({
+                p_user_id: authResult.user.id,
+                p_topic: topic,
+                p_content: aiResult.content
+            })
+        }
+    );
+
+    let saveData = null;
+
+    try {
+        saveData = await saveResponse.json();
+    } catch {
+        saveData = null;
+    }
+
+    if (!saveResponse.ok) {
+
+        console.error(
+            'save_generation error:',
+            saveData
+        );
+
+        return res.status(500).json({
+            success: false,
+            error:
+                'The post was generated, but we could not save your generation count. Please try again.'
+        });
+    }
+
+} catch (error) {
+
+    console.error(
+        'save_generation request failed:',
+        error
+    );
+
+    return res.status(500).json({
+        success: false,
+        error:
+            'The post was generated, but we could not save your generation count.'
+    });
+}
         return res.status(200).json({
 
             success: true,
