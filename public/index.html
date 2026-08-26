@@ -25,7 +25,9 @@
             margin: auto;
         }
 
-        input, textarea, button {
+        input,
+        textarea,
+        button {
             width: 100%;
             padding: 15px;
             margin: 8px 0;
@@ -35,7 +37,8 @@
             box-sizing: border-box;
         }
 
-        input, textarea {
+        input,
+        textarea {
             background: #1a1a1a;
             color: white;
             border: 1px solid #333;
@@ -265,7 +268,7 @@
 
     <button
         id="generateButton"
-        onclick="handleGenerateClick()">
+        onclick="generate()">
 
         Generate Post
 
@@ -535,11 +538,6 @@ async function login() {
 
         if (error) {
 
-            console.error(
-                "Supabase login error:",
-                error
-            );
-
             throw error;
 
         }
@@ -640,7 +638,9 @@ async function showApp(user) {
         .innerText = user.email;
 
 
-    await updateRemaining(user.id);
+    document
+        .getElementById("remaining")
+        .innerText = "3";
 
 }
 
@@ -699,225 +699,6 @@ async function checkUser() {
         );
 
     }
-
-}
-
-
-
-// ==========================================
-// UPDATE DAILY GENERATION COUNT
-// ==========================================
-
-async function updateRemaining(userId) {
-
-    const today =
-        new Date();
-
-
-    const start =
-        new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate()
-        ).toISOString();
-
-
-    const {
-        count,
-        error
-    } =
-        await supabaseClient
-            .from("generation_requests")
-            .select("*", {
-                count: "exact",
-                head: true
-            })
-            .eq("user_id", userId)
-            .gte("created_at", start);
-
-
-    if (error) {
-
-        console.error(
-            "Unable to update generation counter:",
-            error
-        );
-
-        return;
-
-    }
-
-
-    const used =
-        count || 0;
-
-
-    const remaining =
-        Math.max(
-            0,
-            3 - used
-        );
-
-
-    document
-        .getElementById("remaining")
-        .innerText = remaining;
-
-
-    updateGenerateButton(remaining);
-
-}
-
-
-
-// ==========================================
-// UPDATE GENERATE BUTTON
-// ==========================================
-
-function updateGenerateButton(remaining) {
-
-    const button =
-        document.getElementById(
-            "generateButton"
-        );
-
-
-    if (!button) return;
-
-
-    if (remaining <= 0) {
-
-        button.innerText =
-            "🎬 Watch Ad to Get +1 Generation";
-
-    }
-
-    else {
-
-        button.innerText =
-            "Generate Post";
-
-    }
-
-}
-
-
-
-// ==========================================
-// GENERATE BUTTON CLICK
-// ==========================================
-
-async function handleGenerateClick() {
-
-    const {
-        data: { user }
-    } =
-        await supabaseClient.auth.getUser();
-
-
-    const output =
-        document.getElementById("output");
-
-
-    if (!user) {
-
-        output.className = "error";
-
-        output.innerText =
-            "Please log in first.";
-
-        return;
-
-    }
-
-
-    const today =
-        new Date();
-
-
-    const start =
-        new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate()
-        ).toISOString();
-
-
-    const {
-        count,
-        error
-    } =
-        await supabaseClient
-            .from("generation_requests")
-            .select("*", {
-                count: "exact",
-                head: true
-            })
-            .eq("user_id", user.id)
-            .gte("created_at", start);
-
-
-    if (error) {
-
-        console.error(error);
-
-        output.className = "error";
-
-        output.innerText =
-            "Unable to check your generation limit. Please try again.";
-
-        return;
-
-    }
-
-
-    const used =
-        count || 0;
-
-
-    const remaining =
-        Math.max(
-            0,
-            3 - used
-        );
-
-
-    document
-        .getElementById("remaining")
-        .innerText = remaining;
-
-
-    if (remaining <= 0) {
-
-        watchRewardedAd();
-
-        return;
-
-    }
-
-
-    generate();
-
-}
-
-
-
-// ==========================================
-// REWARDED AD
-// ==========================================
-
-function watchRewardedAd() {
-
-    const output =
-        document.getElementById("output");
-
-
-    output.className =
-        "success";
-
-
-    output.innerText =
-        "🎬 Rewarded ad system is being prepared. Please try again later.";
 
 }
 
@@ -1086,7 +867,11 @@ async function generate() {
 
     catch (error) {
 
-        console.error(error);
+        console.error(
+            "Generation error:",
+            error
+        );
+
 
         output.className =
             "error";
@@ -1102,9 +887,8 @@ async function generate() {
 
         button.disabled = false;
 
-        await updateRemaining(
-            user.id
-        );
+        button.innerText =
+            "Generate Post";
 
     }
 
@@ -1122,4 +906,4 @@ checkUser();
 </script>
 
 </body>
-    </html>
+            </html>
