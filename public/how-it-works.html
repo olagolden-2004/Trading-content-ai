@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Learn how TradeContentAI turns simple ideas into useful social media content."
+  >
+
+  <title>How It Works | TradeContentAI</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #080808;
+      color: #ffffff;
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .navbar {
+      width: 100%;
+      border-bottom: 1px solid #242424;
+      background: #080808;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-inner {
+      max-width: 1100px;
+      margin: auto;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .logo-fire {
+      margin-right: 5px;
+    }
+
+    .logo-green {
+      color: #00ff88;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+      font-size: 16px;
+      color: #cccccc;
+    }
+
+    .nav-links a {
+      transition: 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: #00ff88;
+    }
+
+    .nav-button {
+      background: #00ff88;
+      color: #000000;
+      padding: 11px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .nav-button:hover {
+      color: #000000 !important;
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      max-width: 900px;
+      margin: auto;
+      padding: 85px 22px 65px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      border: 1px solid #292929;
+      background: #111111;
+      color: #00ff88;
+      padding: 9px 18px;
+      border-radius: 30px;
+      font-size: 15px;
+      margin-bottom: 25px;
+    }
+
+    .hero h1 {
+      font-size: clamp(42px, 8vw, 70px);
+      line-height: 1.05;
+      margin-bottom: 24px;
+      font-weight: 800;
+    }
+
+    .green {
+      color: #00ff88;
+    }
+
+    .hero p {
+      max-width: 700px;
+      margin: auto;
+      color: #bdbdbd;
+      font-size: 19px;
+    }
+
+    .steps-section {
+      max-width: 1050px;
+      margin: auto;
+      padding: 30px 22px 90px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      color: #999999;
+      max-width: 650px;
+      margin: 0 auto 45px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .step-card {
+      background: #111111;
+      border: 1px solid #292929;
+      border-radius: 20px;
+      padding: 30px 24px;
+      position: relative;
+    }
+
+    .step-number {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #00ff88;
+      color: #000000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 19px;
+      margin-bottom: 20px;
+    }
+
+    .step-card h3 {
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+
+    .step-card p {
+      color: #aaaaaa;
+      font-size: 15px;
+    }
+
+    .example-section {
+      background: #101010;
+      border-top: 1px solid #222222;
+      border-bottom: 1px solid #222222;
+      padding: 75px 22px;
+    }
+
+    .example-inner {
+      max-width: 950px;
+      margin: auto;
+    }
+
+    .example-box {
+      margin-top: 35px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .example-card {
+      background: #080808;
+      border: 1px solid #292929;
+      border-radius: 18px;
+      padding: 28px;
+    }
+
+    .example-card h3 {
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+
+    .example-card p {
+      color: #b3b3b3;
+    }
+
+    .idea {
+      border-left: 4px solid #00ff88;
+      padding-left: 16px;
+      color: #eeeeee !important;
+    }
+
+    .features {
+      max-width: 950px;
+      margin: auto;
+      padding: 80px 22px;
+    }
+
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-top: 35px;
+    }
+
+    .feature {
+      background: #111111;
+      border: 1px solid #292929;
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .feature-icon {
+      font-size: 25px;
+      margin-bottom: 10px;
+    }
+
+    .feature h3 {
+      margin-bottom: 8px;
+      font-size: 19px;
+    }
+
+    .feature p {
+      color: #a8a8a8;
+      font-size: 15px;
+    }
+
+    .cta {
+      max-width: 900px;
+      margin: auto;
+      padding: 70px 22px 90px;
+      text-align: center;
+    }
+
+    .cta-box {
+      background: #111111;
+      border: 1px solid #292929;
+      border-radius: 24px;
+      padding: 50px 25px;
+    }
+
+    .cta h2 {
+      font-size: 34px;
+      margin-bottom: 15px;
+    }
+
+    .cta p {
+      color: #aaaaaa;
+      max-width: 600px;
+      margin: 0 auto 28px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: #00ff88;
+      color: #000000;
+      padding: 15px 28px;
+      border-radius: 13px;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    footer {
+      border-top: 1px solid #242424;
+      padding: 30px 22px;
+      text-align: center;
+      color: #777777;
+      font-size: 14px;
+    }
+
+    .footer-links {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a:hover {
+      color: #00ff88;
+    }
+
+    @media (max-width: 760px) {
+      .nav-inner {
+        flex-direction: column;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .hero {
+        padding-top: 60px;
+      }
+
+      .hero h1 {
+        font-size: 43px;
+      }
+
+      .hero p {
+        font-size: 17px;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+      }
+
+      .example-box {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-list {
+        grid-template-columns: 1fr;
+      }
+
+      .section-title {
+        font-size: 29px;
+      }
+
+      .cta h2 {
+        font-size: 29px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="navbar">
+    <div class="nav-inner">
+
+      <a href="index.html" class="logo">
+        <span class="logo-fire">🔥</span>
+        Trade<span class="logo-green">ContentAI</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="create.html" class="nav-button">Get Started</a>
+      </nav>
+
+    </div>
+  </header>
+
+  <main>
+
+    <section class="hero">
+
+      <div class="badge">
+        ✨ Simple. Fast. AI-Powered.
+      </div>
+
+      <h1>
+        How <span class="green">TradeContentAI</span> Works
+      </h1>
+
+      <p>
+        Turn a simple idea into useful and engaging social media
+        content in just a few easy steps.
+      </p>
+
+    </section>
+
+    <section class="steps-section">
+
+      <h2 class="section-title">
+        Create Content in <span class="green">3 Simple Steps</span>
+      </h2>
+
+      <p class="section-subtitle">
+        You don't need to be an expert writer. Give us your idea
+        and let TradeContentAI help you turn it into content.
+      </p>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div class="step-number">1</div>
+
+          <h3>Enter Your Idea</h3>
+
+          <p>
+            Start with a topic, thought, product, business idea,
+            trading lesson, or anything you want to turn into
+            social media content.
+          </p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">2</div>
+
+          <h3>Choose Your Style</h3>
+
+          <p>
+            Select the type of content and style you want.
+            TradeContentAI helps shape your idea into content
+            that fits your purpose.
+          </p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">3</div>
+
+          <h3>Generate & Use</h3>
+
+          <p>
+            Generate your content, review the result, and use it
+            on your social media platform or edit it to make it
+            your own.
+          </p>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="example-section">
+
+      <div class="example-inner">
+
+        <h2 class="section-title">
+          From <span class="green">Idea</span> to Content
+        </h2>
+
+        <p class="section-subtitle">
+          Here's a simple example of how the process works.
+        </p>
+
+        <div class="example-box">
+
+          <div class="example-card">
+            <h3>💡 Your Idea</h3>
+
+            <p class="idea">
+              "I want to create a post explaining why new traders
+              should manage their risk."
+            </p>
+          </div>
+
+          <div class="example-card">
+            <h3>✨ Your Content</h3>
+
+            <p>
+              TradeContentAI can help turn that simple idea into
+              a clearer, more engaging social media post that is
+              easier for your audience to understand.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+  </section>
+      <section class="features">
+
+      <h2 class="section-title">
+        Why Use <span class="green">TradeContentAI?</span>
+      </h2>
+
+      <p class="section-subtitle">
+        Built to make content creation easier, faster, and less stressful.
+      </p>
+
+      <div class="feature-list">
+
+        <div class="feature">
+          <div class="feature-icon">⚡</div>
+          <h3>Save Time</h3>
+          <p>
+            Spend less time staring at a blank screen and more
+            time focusing on your business and audience.
+          </p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">💡</div>
+          <h3>Start With Simple Ideas</h3>
+          <p>
+            You don't need a perfect prompt. Start with a simple
+            thought and develop it into useful content.
+          </p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">📱</div>
+          <h3>Social Media Ready</h3>
+          <p>
+            Create content designed to be easy to read, share,
+            and adapt for your social media audience.
+          </p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">🎯</div>
+          <h3>Stay Focused</h3>
+          <p>
+            Keep your message clear and focused so your audience
+            can understand what you are trying to say.
+          </p>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="cta">
+
+      <div class="cta-box">
+
+        <h2>
+          Ready to Create <span class="green">Better Content?</span>
+        </h2>
+
+        <p>
+          Take your idea and turn it into content with
+          TradeContentAI.
+        </p>
+
+        <a href="create.html" class="cta-button">
+          🚀 Start Creating
+        </a>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer>
+
+    <p>
+      © 2026 TradeContentAI. All rights reserved.
+    </p>
+
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="privacy-policy.html">Privacy Policy</a>
+    </div>
+
+  </footer>
+
+</body>
+                                       </html>
