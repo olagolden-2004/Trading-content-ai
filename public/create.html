@@ -1041,7 +1041,7 @@ async function login() {
 // LOGOUT
 // ==========================================
 
-  async function logout() {
+async function logout() {
 
     await supabaseClient.auth.signOut();
 
@@ -1246,6 +1246,8 @@ async function handleGenerateClick() {
         } =
             await supabaseClient.auth.getSession();
 
+
+    // PART 1 ENDS HERE
 
         if (!session) {
 
