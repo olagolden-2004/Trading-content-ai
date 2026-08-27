@@ -613,8 +613,7 @@ async function getOwnerDashboard(accessToken) {
                 'Could not connect to the owner dashboard.'
         };
     }
-}
-
+    }
 
 // ============================================================
 // ADSENSE robots.txt
