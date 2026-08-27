@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <!-- Google AdSense -->
+    <script async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7800098599547950"
+        crossorigin="anonymous">
+    </script>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="Create original social media posts with TradeContentAI. Turn your ideas into useful and engaging content for Instagram, TikTok, Facebook, X and LinkedIn.">
+
+    <meta
+        name="robots"
+        content="index, follow">
+
+    <title>Create Content - TradeContentAI</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        a {
+            color: #00ff88;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+
+        /* ==========================================
+           HEADER
+        ========================================== */
+
+        header {
+            border-bottom: 1px solid #222;
+            background: #0a0a0a;
+        }
+
+        .header-inner {
+            width: 100%;
+            max-width: 1000px;
+            margin: auto;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 23px;
+            font-weight: bold;
+        }
+
+        .logo span {
+            color: #00ff88;
+        }
+
+        .home-button {
+            background: #171717;
+            border: 1px solid #333;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 9px;
+            font-weight: bold;
+        }
+
+        .home-button:hover {
+            text-decoration: none;
+            border-color: #00ff88;
+        }
+
+
+        /* ==========================================
+           MAIN
+        ========================================== */
+
+        main {
+            width: 100%;
+            max-width: 850px;
+            margin: auto;
+            padding: 30px 20px 60px;
+        }
+
+
+        /* ==========================================
+           PAGE INTRO
+        ========================================== */
+
+        .page-intro {
+            text-align: center;
+            padding: 25px 0 30px;
+        }
+
+        .page-intro .badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border: 1px solid #242424;
+            border-radius: 30px;
+            color: #00ff88;
+            background: #111;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .page-intro h1 {
+            font-size: 38px;
+            line-height: 1.15;
+            margin: 0 0 15px;
+        }
+
+        .page-intro p {
+            color: #aaa;
+            font-size: 17px;
+            max-width: 650px;
+            margin: auto;
+        }
+
+
+        /* ==========================================
+           AUTH / APP BOXES
+        ========================================== */
+
+        .box {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .box h2 {
+            margin-top: 0;
+            font-size: 28px;
+        }
+
+        .small {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+
+        /* ==========================================
+           TABS
+        ========================================== */
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .tabs button {
+            width: 50%;
+        }
+
+
+        /* ==========================================
+           FORM ELEMENTS
+        ========================================== */
+
+        input,
+        textarea,
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 8px 0;
+            border-radius: 9px;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+        }
+
+        input,
+        textarea {
+            background: #1a1a1a;
+            color: white;
+            border: 1px solid #333;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        button {
+            border: none;
+            background: #00ff88;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.92;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background: #333;
+            color: white;
+        }
+
+
+        /* ==========================================
+           ACCOUNT BAR
+        ========================================== */
+
+        .account-bar {
+            background: #151515;
+            border: 1px solid #222;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .account-info {
+            min-width: 0;
+        }
+
+        .account-email {
+            word-break: break-word;
+        }
+
+        .account-bar button {
+            width: auto;
+            min-width: 90px;
+            padding: 10px 15px;
+            margin: 0;
+        }
+
+        #remaining {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+
+        /* ==========================================
+           GENERATOR
+        ========================================== */
+
+        .generator-box {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        .generator-box h2 {
+            font-size: 29px;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .generator-description {
+            color: #aaa;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .generate-button {
+            font-size: 17px;
+            padding: 16px;
+        }
+
+
+        /* ==========================================
+           OUTPUT
+        ========================================== */
+
+        #output {
+            background: #1a1a1a;
+            border: 1px solid #292929;
+            padding: 20px;
+            border-radius: 12px;
+            white-space: pre-wrap;
+            line-height: 1.7;
+            min-height: 70px;
+            margin-top: 20px;
+            color: white;
+        }
+
+        .output-empty {
+            color: #666 !important;
+        }
+
+        .error {
+            color: #ff6b6b !important;
+        }
+
+        .success {
+            color: white !important;
+        }
+
+
+        /* ==========================================
+           HELP BOX
+        ========================================== */
+
+        .help-box {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 14px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .help-box h3 {
+            margin-top: 0;
+        }
+
+        .help-box p {
+            color: #aaa;
+            margin-bottom: 0;
+        }
+
+
+        /* ==========================================
+           HIDDEN
+        ========================================== */
+
+        .hidden {
+            display: none !important;
+        }
+
+
+        /* ==========================================
+           FOOTER
+        ========================================== */
+
+        footer {
+            border-top: 1px solid #222;
+            padding: 30px 20px;
+            text-align: center;
+            color: #777;
+            font-size: 14px;
+        }
+
+        footer p {
+            margin: 7px 0;
+        }
+
+
+        /* ==========================================
+           MOBILE
+        ========================================== */
+
+        @media (max-width: 700px) {
+
+            .header-inner {
+                padding: 15px;
+            }
+
+            .logo {
+                font-size: 20px;
+            }
+
+            .home-button {
+                padding: 9px 12px;
+                font-size: 14px;
+            }
+
+            main {
+                padding: 20px 15px 50px;
+            }
+
+            .page-intro {
+                padding-top: 15px;
+            }
+
+            .page-intro h1 {
+                font-size: 31px;
+            }
+
+            .page-intro p {
+                font-size: 16px;
+            }
+
+            .box,
+            .generator-box {
+                padding: 20px;
+            }
+
+            .account-bar {
+                align-items: flex-start;
+            }
+
+            .account-bar button {
+                flex-shrink: 0;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- ===================================================== -->
+<!-- HEADER -->
+<!-- ===================================================== -->
+
+<header>
+
+    <div class="header-inner">
+
+        <div class="logo">
+            🔥 Trade<span>ContentAI</span>
+        </div>
+
+        <a
+            href="/"
+            class="home-button">
+
+            ← Home
+
+        </a>
+
+    </div>
+
+</header>
+
+
+
+<!-- ===================================================== -->
+<!-- MAIN -->
+<!-- ===================================================== -->
+
+<main>
+
+
+    <!-- ================================================= -->
+    <!-- INTRO -->
+    <!-- ================================================= -->
+
+    <section class="page-intro">
+
+        <div class="badge">
+            ✨ AI-Powered Content Creation
+        </div>
+
+        <h1>
+            Create Your Next Post
+        </h1>
+
+        <p>
+            Enter your idea and let TradeContentAI turn it
+            into a complete social media post.
+        </p>
+
+    </section>
+
+
+
+    <!-- ================================================= -->
+    <!-- AUTH SCREEN -->
+    <!-- ================================================= -->
+
+    <section
+        id="authScreen"
+        class="box">
+
+        <h2>
+            Start Creating Content
+        </h2>
+
+        <p class="small">
+            Create an account or log in to use TradeContentAI.
+        </p>
+
+
+        <div class="tabs">
+
+            <button
+                id="loginTab"
+                onclick="showLogin()">
+
+                Log In
+
+            </button>
+
+            <button
+                id="signupTab"
+                class="secondary"
+                onclick="showSignup()">
+
+                Create Account
+
+            </button>
+
+        </div>
+
+
+
+        <!-- ================================================= -->
+        <!-- LOGIN -->
+        <!-- ================================================= -->
+
+        <div id="loginForm">
+
+            <h3>
+                Welcome Back
+            </h3>
+
+            <input
+                id="loginEmail"
+                type="email"
+                placeholder="Email address"
+                autocomplete="email">
+
+            <input
+                id="loginPassword"
+                type="password"
+                placeholder="Password"
+                autocomplete="current-password">
+
+            <button
+                id="loginButton"
+                onclick="login()">
+
+                Log In
+
+            </button>
+
+        </div>
+
+
+
+        <!-- ================================================= -->
+        <!-- SIGNUP -->
+        <!-- ================================================= -->
+
+        <div
+            id="signupForm"
+            class="hidden">
+
+            <h3>
+                Create Your Account
+            </h3>
+
+            <input
+                id="signupEmail"
+                type="email"
+                placeholder="Email address"
+                autocomplete="email">
+
+            <input
+                id="signupPassword"
+                type="password"
+                placeholder="Create password"
+                autocomplete="new-password">
+
+            <button
+                id="signupButton"
+                onclick="signup()">
+
+                Create Account
+
+            </button>
+
+        </div>
+
+
+        <div id="authMessage"></div>
+
+    </section>
+
+
+
+    <!-- ================================================= -->
+    <!-- APP SCREEN -->
+    <!-- ================================================= -->
+
+    <section
+        id="appSection"
+        class="hidden">
+
+
+        <!-- ACCOUNT -->
+
+        <div class="account-bar">
+
+            <div class="account-info">
+
+                👤
+
+                <span
+                    id="userEmail"
+                    class="account-email">
+                </span>
+
+                <div class="small">
+
+                    Free generations remaining:
+
+                    <span id="remaining">
+                        3
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <button
+                class="secondary"
+                onclick="logout()">
+
+                Log Out
+
+            </button>
+
+        </div>
+
+
+
+        <!-- GENERATOR -->
+
+        <div class="generator-box">
+
+            <h2>
+                Create Your Social Media Post
+            </h2>
+
+            <p class="generator-description">
+                What do you want to post about today?
+            </p>
+
+
+            <textarea
+                id="topic"
+                rows="5"
+                placeholder="Example: 5 ways to grow an Instagram page">
+            </textarea>
+
+
+            <button
+                id="generateButton"
+                class="generate-button"
+                onclick="handleGenerateClick()">
+
+                Generate Post
+
+            </button>
+
+
+            <div
+                id="output"
+                class="output-empty">
+
+                Your generated post will appear here.
+
+            </div>
+
+        </div>
+
+
+
+        <!-- HELP -->
+
+        <div class="help-box">
+
+            <h3>
+                💡 Create Better Content
+            </h3>
+
+            <p>
+                Be specific about what you want to post.
+                You can ask for content about business,
+                fashion, food, fitness, technology,
+                motivation, relationships, trading and more.
+            </p>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+
+<!-- ===================================================== -->
+<!-- FOOTER -->
+<!-- ===================================================== -->
+
+<footer>
+
+    <p>
+        © 2026 TradeContentAI
+    </p>
+
+    <p>
+        AI-powered social media content creation.
+    </p>
+
+    <p>
+        <a href="/">
+            Back to Home
+        </a>
+    </p>
+
+</footer>
+
+
+
+<script>
+
+
+// ==========================================
+// SUPABASE CONFIG
+// ==========================================
+
+const SUPABASE_URL =
+    "https://rbccdpbzpkexbjvxoqum.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "sb_publishable_xVlsUXU8Wm8ouTf3xeKrzg_X37uHzYo";
+
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+
+// ==========================================
+// SHOW LOGIN
+// ==========================================
+
+function showLogin() {
+
+    document
+        .getElementById("loginForm")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("signupForm")
+        .classList.add("hidden");
+
+    document
+        .getElementById("authMessage")
+        .innerText = "";
+
+}
+
+
+
+// ==========================================
+// SHOW SIGNUP
+// ==========================================
+
+function showSignup() {
+
+    document
+        .getElementById("signupForm")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("loginForm")
+        .classList.add("hidden");
+
+    document
+        .getElementById("authMessage")
+        .innerText = "";
+
+}
+
+
+
+// ==========================================
+// CREATE ACCOUNT
+// ==========================================
+
+async function signup() {
+
+    const email =
+        document
+            .getElementById("signupEmail")
+            .value
+            .trim();
+
+    const password =
+        document
+            .getElementById("signupPassword")
+            .value;
+
+    const message =
+        document.getElementById("authMessage");
+
+    const button =
+        document.getElementById("signupButton");
+
+
+    if (!email || !password) {
+
+        message.className = "error";
+
+        message.innerText =
+            "Please enter your email and password.";
+
+        return;
+
+    }
+
+
+    if (password.length < 6) {
+
+        message.className = "error";
+
+        message.innerText =
+            "Password must be at least 6 characters.";
+
+        return;
+
+    }
+
+
+    button.disabled = true;
+
+    button.innerText =
+        "Creating account...";
+
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.auth.signUp({
+
+                email: email,
+
+                password: password
+
+            });
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        if (data.user && !data.session) {
+
+            message.className = "success";
+
+            message.innerText =
+                "✅ Account created! Check your email to confirm your account, then log in.";
+
+            return;
+
+        }
+
+
+        if (data.user) {
+
+            message.className = "success";
+
+            message.innerText =
+                "✅ Account created successfully.";
+
+            await showApp(data.user);
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Signup error:",
+            error
+        );
+
+        message.className = "error";
+
+        message.innerText =
+            "Signup failed: " + error.message;
+
+    }
+
+    finally {
+
+        button.disabled = false;
+
+        button.innerText =
+            "Create Account";
+
+    }
+
+}
+
+
+
+// ==========================================
+// LOGIN
+// ==========================================
+
+async function login() {
+
+    const email =
+        document
+            .getElementById("loginEmail")
+            .value
+            .trim();
+
+    const password =
+        document
+            .getElementById("loginPassword")
+            .value;
+
+    const message =
+        document.getElementById("authMessage");
+
+    const button =
+        document.getElementById("loginButton");
+
+
+    if (!email || !password) {
+
+        message.className = "error";
+
+        message.innerText =
+            "Please enter your email and password.";
+
+        return;
+
+    }
+
+
+    button.disabled = true;
+
+    button.innerText =
+        "Logging in...";
+
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.auth.signInWithPassword({
+
+                email: email,
+
+                password: password
+
+            });
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        if (!data.user) {
+
+            throw new Error(
+                "No user account was returned."
+            );
+
+        }
+
+
+        await showApp(data.user);
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Login error:",
+            error
+        );
+
+        message.className = "error";
+
+        message.innerText =
+            "Login failed: " + error.message;
+
+    }
+
+    finally {
+
+        button.disabled = false;
+
+        button.innerText =
+            "Log In";
+
+    }
+
+}
+
+
+
+// ==========================================
+// LOGOUT
+// ==========================================
+
+  async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+
+    document
+        .getElementById("appSection")
+        .classList.add("hidden");
+
+
+    document
+        .getElementById("authScreen")
+        .classList.remove("hidden");
+
+
+    showLogin();
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+}
+
+
+
+// ==========================================
+// SHOW APP
+// ==========================================
+
+async function showApp(user) {
+
+    if (!user) return;
+
+
+    document
+        .getElementById("authScreen")
+        .classList.add("hidden");
+
+
+    document
+        .getElementById("appSection")
+        .classList.remove("hidden");
+
+
+    document
+        .getElementById("userEmail")
+        .innerText =
+            user.email || "";
+
+
+    document
+        .getElementById("remaining")
+        .innerText = "3";
+
+
+    document
+        .getElementById("generateButton")
+        .disabled = false;
+
+
+    document
+        .getElementById("generateButton")
+        .innerText =
+            "Generate Post";
+
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+}
+
+
+
+// ==========================================
+// CHECK CURRENT USER
+// ==========================================
+
+async function checkUser() {
+
+    try {
+
+        const {
+            data: { user },
+            error
+        } =
+            await supabaseClient.auth.getUser();
+
+
+        if (error) {
+
+            console.error(
+                "User check error:",
+                error
+            );
+
+        }
+
+
+        if (user) {
+
+            await showApp(user);
+
+        }
+
+        else {
+
+            document
+                .getElementById("authScreen")
+                .classList.remove("hidden");
+
+            document
+                .getElementById("appSection")
+                .classList.add("hidden");
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Startup error:",
+            error
+        );
+
+    }
+
+}
+
+
+
+// ==========================================
+// GENERATE BUTTON CLICK
+// ==========================================
+
+async function handleGenerateClick() {
+
+    const {
+        data: { user }
+    } =
+        await supabaseClient.auth.getUser();
+
+
+    const output =
+        document.getElementById("output");
+
+
+    const button =
+        document.getElementById("generateButton");
+
+
+    if (!user) {
+
+        output.className = "error";
+
+        output.innerText =
+            "Please log in first.";
+
+        return;
+
+    }
+
+
+    const topic =
+        document
+            .getElementById("topic")
+            .value
+            .trim();
+
+
+    if (!topic) {
+
+        output.className = "error";
+
+        output.innerText =
+            "Please enter a topic first.";
+
+        return;
+
+    }
+
+
+    output.className =
+        "success";
+
+    output.innerText =
+        "Checking your generation availability...";
+
+
+    button.disabled = true;
+
+    button.innerText =
+        "Checking...";
+
+
+    try {
+
+        const {
+            data: { session }
+        } =
+            await supabaseClient.auth.getSession();
+
+
+        if (!session) {
+
+            throw new Error(
+                "Your login session has expired. Please log in again."
+            );
+
+        }
+
+
+        const res =
+            await fetch(
+                "/generate",
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            "Bearer " +
+                            session.access_token
+
+                    },
+
+                    body: JSON.stringify({
+
+                        topic: topic
+
+                    })
+
+                }
+            );
+
+
+        let data = null;
+
+        try {
+
+            data = await res.json();
+
+        } catch {
+
+            data = null;
+
+        }
+
+
+
+        // ======================================
+        // DAILY LIMIT REACHED
+        // ======================================
+
+        if (
+            res.status === 429
+        ) {
+
+            const remaining =
+                Number.isFinite(
+                    Number(data?.remaining)
+                )
+                    ? Number(data.remaining)
+                    : 0;
+
+
+            document
+                .getElementById("remaining")
+                .innerText =
+                    remaining;
+
+
+            button.innerText =
+                "🎬 Watch Ad to Get +1 Generation";
+
+
+            output.className =
+                "error";
+
+
+            output.innerText =
+                data?.error ||
+                "You have reached your daily generation limit. Please come back tomorrow.";
+
+
+            return;
+
+        }
+
+
+
+        // ======================================
+        // OTHER SERVER ERROR
+        // ======================================
+
+        if (!res.ok) {
+
+            throw new Error(
+                data?.error ||
+                "The server could not generate your post."
+            );
+
+        }
+
+
+
+        // ======================================
+        // SUCCESS
+        // ======================================
+
+        if (!data?.content) {
+
+            throw new Error(
+                "The AI returned no content. Please try again."
+            );
+
+        }
+
+
+        output.className =
+            "success";
+
+
+        output.innerText =
+            data.content;
+
+
+        if (
+            typeof data.remaining !==
+            "undefined"
+        ) {
+
+            document
+                .getElementById("remaining")
+                .innerText =
+                    data.remaining;
+
+        }
+
+
+        document
+            .getElementById("topic")
+            .value = "";
+
+
+        if (
+            Number(data.remaining) <= 0
+        ) {
+
+            button.innerText =
+                "🎬 Watch Ad to Get +1 Generation";
+
+        }
+
+        else {
+
+            button.innerText =
+                "Generate Post";
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Generation error:",
+            error
+        );
+
+
+        output.className =
+            "error";
+
+
+        output.innerText =
+            "❌ Error: " +
+            error.message;
+
+
+        button.innerText =
+            "Generate Post";
+
+    }
+
+    finally {
+
+        button.disabled = false;
+
+    }
+
+}
+
+
+
+// ==========================================
+// START APPLICATION
+// ==========================================
+
+checkUser();
+
+
+</script>
+
+</body>
+
+</html>
