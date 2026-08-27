@@ -28,6 +28,13 @@ const GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 
 // ============================================================
+// ADSENSE CONFIGURATION
+// ============================================================
+
+const ADSENSE_PUBLISHER_ID = 'pub-7800098599547950';
+
+
+// ============================================================
 // AI PROMPT
 // ============================================================
 
@@ -610,6 +617,56 @@ async function getOwnerDashboard(accessToken) {
 
 
 // ============================================================
+// ADSENSE robots.txt
+// ============================================================
+
+app.get('/robots.txt', (req, res) => {
+
+    res.type('text/plain');
+
+    res.send(
+`User-agent: *
+Allow: /
+
+Sitemap: https://trading-content-ai-1.onrender.com/sitemap.xml`
+    );
+});
+
+
+// ============================================================
+// ADSENSE ads.txt
+// ============================================================
+
+app.get('/ads.txt', (req, res) => {
+
+    res.type('text/plain');
+
+    res.send(
+`google.com, ${ADSENSE_PUBLISHER_ID}, DIRECT, f08c47fec0942fa0`
+    );
+});
+
+
+// ============================================================
+// SIMPLE SITEMAP
+// ============================================================
+
+app.get('/sitemap.xml', (req, res) => {
+
+    res.type('application/xml');
+
+    res.send(
+`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://trading-content-ai-1.onrender.com/</loc>
+    </url>
+</urlset>`
+    );
+});
+
+
+// ============================================================
 // OWNER DASHBOARD ROUTE
 // ============================================================
 
@@ -750,9 +807,6 @@ app.post('/generate', async (req, res) => {
 
         // ------------------------------------------------------
         // RESERVE ONE GENERATION
-        //
-        // reserve_generation() is the single source of truth
-        // for the daily generation limit.
         // ------------------------------------------------------
 
         const reservation =
@@ -797,14 +851,6 @@ app.post('/generate', async (req, res) => {
 
         if (!aiResult.success) {
 
-            /*
-             * The generation has already been reserved.
-             *
-             * We do not attempt a fake refund here.
-             * A safe refund/cancellation function can be added
-             * separately later.
-             */
-
             return res.status(
                 aiResult.status === 429
                     ? 429
@@ -827,10 +873,6 @@ app.post('/generate', async (req, res) => {
 
         // ------------------------------------------------------
         // SAVE SUCCESSFUL POST
-        //
-        // This saves the generated content/history.
-        // It does NOT replace reserve_generation() as the
-        // generation-limit system.
         // ------------------------------------------------------
 
         const saved =
@@ -957,7 +999,10 @@ app.use('/',
         if (
             req.path === '/generate' ||
             req.path === '/health' ||
-            req.path === '/owner-dashboard'
+            req.path === '/owner-dashboard' ||
+            req.path === '/robots.txt' ||
+            req.path === '/ads.txt' ||
+            req.path === '/sitemap.xml'
         ) {
             return next();
         }
@@ -1038,6 +1083,10 @@ app.listen(PORT, () => {
         `Gemini configured: ${Boolean(
             GEMINI_API_KEY
         )}`
+    );
+
+    console.log(
+        `AdSense Publisher ID: ${ADSENSE_PUBLISHER_ID}`
     );
 
     console.log(
