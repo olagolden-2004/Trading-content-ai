@@ -27,7 +27,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
     <style>
 
         * {
@@ -54,11 +53,6 @@
         a:hover {
             text-decoration: underline;
         }
-
-
-        /* ==========================================
-           HEADER
-        ========================================== */
 
         header {
             border-bottom: 1px solid #222;
@@ -99,22 +93,12 @@
             border-color: #00ff88;
         }
 
-
-        /* ==========================================
-           MAIN
-        ========================================== */
-
         main {
             width: 100%;
             max-width: 850px;
             margin: auto;
             padding: 30px 20px 60px;
         }
-
-
-        /* ==========================================
-           PAGE INTRO
-        ========================================== */
 
         .page-intro {
             text-align: center;
@@ -145,11 +129,6 @@
             margin: auto;
         }
 
-
-        /* ==========================================
-           AUTH / APP BOXES
-        ========================================== */
-
         .box {
             background: #111;
             border: 1px solid #222;
@@ -168,11 +147,6 @@
             font-size: 14px;
         }
 
-
-        /* ==========================================
-           TABS
-        ========================================== */
-
         .tabs {
             display: flex;
             gap: 8px;
@@ -182,11 +156,6 @@
         .tabs button {
             width: 50%;
         }
-
-
-        /* ==========================================
-           FORM ELEMENTS
-        ========================================== */
 
         input,
         textarea,
@@ -239,18 +208,12 @@
             color: white;
         }
 
-
-        /* ==========================================
-           ACCOUNT BAR
-        ========================================== */
-
         .account-bar {
             background: #151515;
             border: 1px solid #222;
             padding: 15px;
             border-radius: 12px;
             margin-bottom: 20px;
-
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -277,11 +240,6 @@
             font-weight: bold;
         }
 
-
-        /* ==========================================
-           GENERATOR
-        ========================================== */
-
         .generator-box {
             background: #111;
             border: 1px solid #222;
@@ -305,11 +263,6 @@
             font-size: 17px;
             padding: 16px;
         }
-
-
-        /* ==========================================
-           OUTPUT
-        ========================================== */
 
         #output {
             background: #1a1a1a;
@@ -335,11 +288,6 @@
             color: white !important;
         }
 
-
-        /* ==========================================
-           HELP BOX
-        ========================================== */
-
         .help-box {
             background: #111;
             border: 1px solid #222;
@@ -357,19 +305,9 @@
             margin-bottom: 0;
         }
 
-
-        /* ==========================================
-           HIDDEN
-        ========================================== */
-
         .hidden {
             display: none !important;
         }
-
-
-        /* ==========================================
-           FOOTER
-        ========================================== */
 
         footer {
             border-top: 1px solid #222;
@@ -382,11 +320,6 @@
         footer p {
             margin: 7px 0;
         }
-
-
-        /* ==========================================
-           MOBILE
-        ========================================== */
 
         @media (max-width: 700px) {
 
@@ -431,20 +364,13 @@
             .account-bar button {
                 flex-shrink: 0;
             }
-
         }
 
     </style>
 
 </head>
 
-
 <body>
-
-
-<!-- ===================================================== -->
-<!-- HEADER -->
-<!-- ===================================================== -->
 
 <header>
 
@@ -466,18 +392,7 @@
 
 </header>
 
-
-
-<!-- ===================================================== -->
-<!-- MAIN -->
-<!-- ===================================================== -->
-
 <main>
-
-
-    <!-- ================================================= -->
-    <!-- INTRO -->
-    <!-- ================================================= -->
 
     <section class="page-intro">
 
@@ -496,12 +411,6 @@
 
     </section>
 
-
-
-    <!-- ================================================= -->
-    <!-- AUTH SCREEN -->
-    <!-- ================================================= -->
-
     <section
         id="authScreen"
         class="box">
@@ -513,7 +422,6 @@
         <p class="small">
             Create an account or log in to use TradeContentAI.
         </p>
-
 
         <div class="tabs">
 
@@ -535,12 +443,6 @@
             </button>
 
         </div>
-
-
-
-        <!-- ================================================= -->
-        <!-- LOGIN -->
-        <!-- ================================================= -->
 
         <div id="loginForm">
 
@@ -569,12 +471,6 @@
             </button>
 
         </div>
-
-
-
-        <!-- ================================================= -->
-        <!-- SIGNUP -->
-        <!-- ================================================= -->
 
         <div
             id="signupForm"
@@ -606,23 +502,13 @@
 
         </div>
 
-
         <div id="authMessage"></div>
 
     </section>
 
-
-
-    <!-- ================================================= -->
-    <!-- APP SCREEN -->
-    <!-- ================================================= -->
-
     <section
         id="appSection"
         class="hidden">
-
-
-        <!-- ACCOUNT -->
 
         <div class="account-bar">
 
@@ -640,13 +526,12 @@
                     Free generations remaining:
 
                     <span id="remaining">
-                        3
+                        Checking...
                     </span>
 
                 </div>
 
             </div>
-
 
             <button
                 class="secondary"
@@ -658,10 +543,6 @@
 
         </div>
 
-
-
-        <!-- GENERATOR -->
-
         <div class="generator-box">
 
             <h2>
@@ -672,13 +553,11 @@
                 What do you want to post about today?
             </p>
 
-
             <textarea
                 id="topic"
                 rows="5"
                 placeholder="Example: 5 ways to grow an Instagram page">
             </textarea>
-
 
             <button
                 id="generateButton"
@@ -689,7 +568,6 @@
 
             </button>
 
-
             <div
                 id="output"
                 class="output-empty">
@@ -699,10 +577,6 @@
             </div>
 
         </div>
-
-
-
-        <!-- HELP -->
 
         <div class="help-box">
 
@@ -723,12 +597,6 @@
 
 </main>
 
-
-
-<!-- ===================================================== -->
-<!-- FOOTER -->
-<!-- ===================================================== -->
-
 <footer>
 
     <p>
@@ -747,14 +615,7 @@
 
 </footer>
 
-
-
 <script>
-
-
-// ==========================================
-// SUPABASE CONFIG
-// ==========================================
 
 const SUPABASE_URL =
     "https://rbccdpbzpkexbjvxoqum.supabase.co";
@@ -762,18 +623,11 @@ const SUPABASE_URL =
 const SUPABASE_ANON_KEY =
     "sb_publishable_xVlsUXU8Wm8ouTf3xeKrzg_X37uHzYo";
 
-
 const supabaseClient =
     window.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY
     );
-
-
-
-// ==========================================
-// SHOW LOGIN
-// ==========================================
 
 function showLogin() {
 
@@ -788,14 +642,7 @@ function showLogin() {
     document
         .getElementById("authMessage")
         .innerText = "";
-
 }
-
-
-
-// ==========================================
-// SHOW SIGNUP
-// ==========================================
 
 function showSignup() {
 
@@ -810,14 +657,7 @@ function showSignup() {
     document
         .getElementById("authMessage")
         .innerText = "";
-
 }
-
-
-
-// ==========================================
-// CREATE ACCOUNT
-// ==========================================
 
 async function signup() {
 
@@ -838,7 +678,6 @@ async function signup() {
     const button =
         document.getElementById("signupButton");
 
-
     if (!email || !password) {
 
         message.className = "error";
@@ -847,9 +686,7 @@ async function signup() {
             "Please enter your email and password.";
 
         return;
-
     }
-
 
     if (password.length < 6) {
 
@@ -859,32 +696,24 @@ async function signup() {
             "Password must be at least 6 characters.";
 
         return;
-
     }
-
 
     button.disabled = true;
 
     button.innerText =
         "Creating account...";
 
-
     try {
 
         const { data, error } =
             await supabaseClient.auth.signUp({
-
                 email: email,
-
                 password: password
-
             });
-
 
         if (error) {
             throw error;
         }
-
 
         if (data.user && !data.session) {
 
@@ -894,9 +723,7 @@ async function signup() {
                 "✅ Account created! Check your email to confirm your account, then log in.";
 
             return;
-
         }
-
 
         if (data.user) {
 
@@ -906,12 +733,9 @@ async function signup() {
                 "✅ Account created successfully.";
 
             await showApp(data.user);
-
         }
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(
             "Signup error:",
@@ -923,24 +747,14 @@ async function signup() {
         message.innerText =
             "Signup failed: " + error.message;
 
-    }
-
-    finally {
+    } finally {
 
         button.disabled = false;
 
         button.innerText =
             "Create Account";
-
     }
-
 }
-
-
-
-// ==========================================
-// LOGIN
-// ==========================================
 
 async function login() {
 
@@ -961,7 +775,6 @@ async function login() {
     const button =
         document.getElementById("loginButton");
 
-
     if (!email || !password) {
 
         message.className = "error";
@@ -970,15 +783,12 @@ async function login() {
             "Please enter your email and password.";
 
         return;
-
     }
-
 
     button.disabled = true;
 
     button.innerText =
         "Logging in...";
-
 
     try {
 
@@ -986,31 +796,24 @@ async function login() {
             await supabaseClient.auth.signInWithPassword({
 
                 email: email,
-
                 password: password
 
             });
 
-
         if (error) {
             throw error;
         }
-
 
         if (!data.user) {
 
             throw new Error(
                 "No user account was returned."
             );
-
         }
-
 
         await showApp(data.user);
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(
             "Login error:",
@@ -1022,104 +825,174 @@ async function login() {
         message.innerText =
             "Login failed: " + error.message;
 
-    }
-
-    finally {
+    } finally {
 
         button.disabled = false;
 
         button.innerText =
             "Log In";
-
     }
-
 }
 
-
-
-// ==========================================
-// LOGOUT
-// ==========================================
-
-async function logout() {
+    async function logout() {
 
     await supabaseClient.auth.signOut();
-
 
     document
         .getElementById("appSection")
         .classList.add("hidden");
 
-
     document
         .getElementById("authScreen")
         .classList.remove("hidden");
 
-
     showLogin();
+
+    document
+        .getElementById("remaining")
+        .innerText = "Checking...";
 
     window.scrollTo({
         top: 0,
         behavior: "smooth"
     });
-
 }
 
 
+// ============================================================
+// LOAD CURRENT GENERATION COUNT
+// ============================================================
 
-// ==========================================
+async function loadGenerationStatus() {
+
+    const remainingElement =
+        document.getElementById("remaining");
+
+    try {
+
+        const {
+            data: { session },
+            error
+        } =
+            await supabaseClient.auth.getSession();
+
+        if (error || !session) {
+
+            remainingElement.innerText =
+                "3";
+
+            return;
+        }
+
+        const response =
+            await fetch(
+                "/generate-status",
+                {
+                    method: "GET",
+
+                    headers: {
+                        "Authorization":
+                            "Bearer " +
+                            session.access_token
+                    }
+                }
+            );
+
+        let data = null;
+
+        try {
+            data = await response.json();
+        } catch {
+            data = null;
+        }
+
+        if (
+            response.ok &&
+            data &&
+            typeof data.remaining !== "undefined"
+        ) {
+
+            remainingElement.innerText =
+                data.remaining;
+
+            return;
+        }
+
+        /*
+         * If the status endpoint is not available yet,
+         * do NOT change the real server-side generation count.
+         */
+        remainingElement.innerText =
+            "—";
+
+    } catch (error) {
+
+        console.error(
+            "Generation status error:",
+            error
+        );
+
+        remainingElement.innerText =
+            "—";
+    }
+}
+
+
+// ============================================================
 // SHOW APP
-// ==========================================
+// ============================================================
 
 async function showApp(user) {
 
-    if (!user) return;
-
+    if (!user) {
+        return;
+    }
 
     document
         .getElementById("authScreen")
         .classList.add("hidden");
 
-
     document
         .getElementById("appSection")
         .classList.remove("hidden");
-
 
     document
         .getElementById("userEmail")
         .innerText =
             user.email || "";
 
-
+    /*
+     * IMPORTANT:
+     * Do NOT reset remaining generations to 3 here.
+     *
+     * The server/Supabase is the source of truth.
+     */
     document
         .getElementById("remaining")
-        .innerText = "3";
-
+        .innerText =
+            "Checking...";
 
     document
         .getElementById("generateButton")
         .disabled = false;
-
 
     document
         .getElementById("generateButton")
         .innerText =
             "Generate Post";
 
+    await loadGenerationStatus();
 
     window.scrollTo({
         top: 0,
         behavior: "smooth"
     });
-
 }
 
 
-
-// ==========================================
+// ============================================================
 // CHECK CURRENT USER
-// ==========================================
+// ============================================================
 
 async function checkUser() {
 
@@ -1131,24 +1004,19 @@ async function checkUser() {
         } =
             await supabaseClient.auth.getUser();
 
-
         if (error) {
 
             console.error(
                 "User check error:",
                 error
             );
-
         }
-
 
         if (user) {
 
             await showApp(user);
 
-        }
-
-        else {
+        } else {
 
             document
                 .getElementById("authScreen")
@@ -1157,27 +1025,21 @@ async function checkUser() {
             document
                 .getElementById("appSection")
                 .classList.add("hidden");
-
         }
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(
             "Startup error:",
             error
         );
-
     }
-
 }
 
 
-
-// ==========================================
+// ============================================================
 // GENERATE BUTTON CLICK
-// ==========================================
+// ============================================================
 
 async function handleGenerateClick() {
 
@@ -1186,26 +1048,22 @@ async function handleGenerateClick() {
     } =
         await supabaseClient.auth.getUser();
 
-
     const output =
         document.getElementById("output");
-
 
     const button =
         document.getElementById("generateButton");
 
-
     if (!user) {
 
-        output.className = "error";
+        output.className =
+            "error";
 
         output.innerText =
             "Please log in first.";
 
         return;
-
     }
-
 
     const topic =
         document
@@ -1213,18 +1071,16 @@ async function handleGenerateClick() {
             .value
             .trim();
 
-
     if (!topic) {
 
-        output.className = "error";
+        output.className =
+            "error";
 
         output.innerText =
             "Please enter a topic first.";
 
         return;
-
     }
-
 
     output.className =
         "success";
@@ -1232,12 +1088,10 @@ async function handleGenerateClick() {
     output.innerText =
         "Checking your generation availability...";
 
-
     button.disabled = true;
 
     button.innerText =
         "Checking...";
-
 
     try {
 
@@ -1246,23 +1100,20 @@ async function handleGenerateClick() {
         } =
             await supabaseClient.auth.getSession();
 
-
-    // PART 1 ENDS HERE
-
         if (!session) {
 
             throw new Error(
                 "Your login session has expired. Please log in again."
             );
-
         }
 
+        button.innerText =
+            "Generating...";
 
         const res =
             await fetch(
                 "/generate",
                 {
-
                     method: "POST",
 
                     headers: {
@@ -1277,36 +1128,29 @@ async function handleGenerateClick() {
                     },
 
                     body: JSON.stringify({
-
                         topic: topic
-
                     })
-
                 }
             );
-
 
         let data = null;
 
         try {
 
-            data = await res.json();
+            data =
+                await res.json();
 
         } catch {
 
             data = null;
-
         }
 
 
-
-        // ======================================
+        // =====================================================
         // DAILY LIMIT REACHED
-        // ======================================
+        // =====================================================
 
-        if (
-            res.status === 429
-        ) {
+        if (res.status === 429) {
 
             const remaining =
                 Number.isFinite(
@@ -1315,35 +1159,28 @@ async function handleGenerateClick() {
                     ? Number(data.remaining)
                     : 0;
 
-
             document
                 .getElementById("remaining")
                 .innerText =
                     remaining;
 
-
             button.innerText =
                 "🎬 Watch Ad to Get +1 Generation";
 
-
             output.className =
                 "error";
-
 
             output.innerText =
                 data?.error ||
                 "You have reached your daily generation limit. Please come back tomorrow.";
 
-
             return;
-
         }
 
 
-
-        // ======================================
+        // =====================================================
         // OTHER SERVER ERROR
-        // ======================================
+        // =====================================================
 
         if (!res.ok) {
 
@@ -1351,27 +1188,22 @@ async function handleGenerateClick() {
                 data?.error ||
                 "The server could not generate your post."
             );
-
         }
 
 
-
-        // ======================================
+        // =====================================================
         // SUCCESS
-        // ======================================
+        // =====================================================
 
         if (!data?.content) {
 
             throw new Error(
                 "The AI returned no content. Please try again."
             );
-
         }
-
 
         output.className =
             "success";
-
 
         output.innerText =
             data.content;
@@ -1386,7 +1218,6 @@ async function handleGenerateClick() {
                 .getElementById("remaining")
                 .innerText =
                     data.remaining;
-
         }
 
 
@@ -1402,55 +1233,75 @@ async function handleGenerateClick() {
             button.innerText =
                 "🎬 Watch Ad to Get +1 Generation";
 
-        }
-
-        else {
+        } else {
 
             button.innerText =
                 "Generate Post";
-
         }
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(
             "Generation error:",
             error
         );
 
-
         output.className =
             "error";
-
 
         output.innerText =
             "❌ Error: " +
             error.message;
 
-
         button.innerText =
             "Generate Post";
 
-    }
-
-    finally {
+    } finally {
 
         button.disabled = false;
-
     }
-
 }
 
 
+// ============================================================
+// AUTH STATE CHANGES
+// ============================================================
 
-// ==========================================
+supabaseClient.auth.onAuthStateChange(
+    async (event, session) => {
+
+        if (
+            event === "SIGNED_IN" &&
+            session?.user
+        ) {
+
+            await showApp(
+                session.user
+            );
+
+        }
+
+        if (
+            event === "SIGNED_OUT"
+        ) {
+
+            document
+                .getElementById("appSection")
+                .classList.add("hidden");
+
+            document
+                .getElementById("authScreen")
+                .classList.remove("hidden");
+        }
+    }
+);
+
+
+// ============================================================
 // START APPLICATION
-// ==========================================
+// ============================================================
 
 checkUser();
-
 
 </script>
 
