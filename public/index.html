@@ -1,41 +1,190 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
 
+    <!-- Google AdSense -->
     <script async
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7800098599547950"
         crossorigin="anonymous">
     </script>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>TradeContentAI</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="TradeContentAI helps creators generate original social media content for business, fashion, food, fitness, technology, motivation and other topics.">
+
+    <meta
+        name="robots"
+        content="index, follow">
+
+    <title>TradeContentAI - AI Social Media Content Generator</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+
     <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
 
         body {
             font-family: Arial, sans-serif;
             background: #0a0a0a;
             color: white;
-            padding: 20px;
-            max-width: 800px;
-            margin: auto;
+            margin: 0;
+            line-height: 1.6;
         }
 
-        input, textarea, button {
+        a {
+            color: #00ff88;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .header-inner {
+            max-width: 900px;
+            margin: auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .nav-button {
+            background: #00ff88;
+            color: #000;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            line-height: 1.15;
+            margin: 0 0 20px;
+        }
+
+        .hero p {
+            color: #ccc;
+            font-size: 18px;
+            max-width: 700px;
+            margin: 0 auto 25px;
+        }
+
+        .hero-button {
+            display: inline-block;
+            background: #00ff88;
+            color: #000;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 17px;
+        }
+
+        .section {
+            padding: 35px 0;
+        }
+
+        .section h2 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 25px;
+        }
+
+        .section p {
+            color: #ccc;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .feature {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .feature h3 {
+            margin-top: 0;
+        }
+
+        .feature p {
+            font-size: 15px;
+            color: #aaa;
+        }
+
+        .topics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .topic-card {
+            background: #111;
+            border: 1px solid #222;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .auth-wrapper {
+            max-width: 600px;
+            margin: 20px auto 50px;
+        }
+
+        input,
+        textarea,
+        button {
             width: 100%;
             padding: 15px;
             margin: 8px 0;
             border-radius: 8px;
             border: none;
             font-size: 16px;
-            box-sizing: border-box;
         }
 
-        input, textarea {
+        input,
+        textarea {
             background: #1a1a1a;
             color: white;
             border: 1px solid #333;
@@ -64,7 +213,7 @@
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         .box {
@@ -86,6 +235,7 @@
 
         .error {
             color: #ff6b6b;
+            margin-top: 10px;
         }
 
         .success {
@@ -128,153 +278,493 @@
             font-weight: bold;
         }
 
+        .info-box {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+        }
+
+        footer {
+            border-top: 1px solid #222;
+            margin-top: 40px;
+            padding: 30px 20px;
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+        }
+
+        footer p {
+            margin: 8px 0;
+        }
+
+        @media (max-width: 700px) {
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .topics {
+                grid-template-columns: 1fr;
+            }
+
+            .header-inner {
+                flex-direction: column;
+            }
+
+        }
+
     </style>
 
 </head>
 
+
 <body>
 
-<h1>🔥 TradeContentAI</h1>
 
+<!-- ===================================================== -->
+<!-- HEADER -->
+<!-- ===================================================== -->
 
-<!-- ============================= -->
-<!-- AUTH SCREEN -->
-<!-- ============================= -->
+<header>
 
-<div id="authScreen" class="box">
+    <div class="header-inner">
 
-    <div class="tabs">
+        <div class="logo">
+            🔥 TradeContentAI
+        </div>
 
-        <button
-            id="loginTab"
-            onclick="showLogin()">
-            Log In
-        </button>
-
-        <button
-            id="signupTab"
-            class="secondary"
-            onclick="showSignup()">
-            Create Account
-        </button>
+        <a
+            href="#auth"
+            class="nav-button">
+            Get Started
+        </a>
 
     </div>
 
-
-    <!-- LOGIN -->
-
-    <div id="loginForm">
-
-        <h2>Welcome Back</h2>
-
-        <input
-            id="loginEmail"
-            type="email"
-            placeholder="Email address">
-
-        <input
-            id="loginPassword"
-            type="password"
-            placeholder="Password">
-
-        <button
-            id="loginButton"
-            onclick="login()">
-            Log In
-        </button>
-
-    </div>
+</header>
 
 
-    <!-- SIGNUP -->
+<!-- ===================================================== -->
+<!-- PUBLIC HOMEPAGE -->
+<!-- ===================================================== -->
 
-    <div id="signupForm" class="hidden">
-
-        <h2>Create Your Account</h2>
-
-        <input
-            id="signupEmail"
-            type="email"
-            placeholder="Email address">
-
-        <input
-            id="signupPassword"
-            type="password"
-            placeholder="Create password">
-
-        <button
-            id="signupButton"
-            onclick="signup()">
-            Create Account
-        </button>
-
-    </div>
+<main>
 
 
-    <div id="authMessage"></div>
+    <section class="hero">
 
-</div>
+        <h1>
+            Create Better Social Media Content With AI
+        </h1>
+
+        <p>
+            TradeContentAI helps creators, entrepreneurs,
+            businesses and social media users turn their ideas
+            into original, useful and engaging social media posts.
+        </p>
+
+        <a
+            href="#auth"
+            class="hero-button">
+            Start Creating
+        </a>
+
+    </section>
 
 
+    <!-- ================================================= -->
+    <!-- ABOUT -->
+    <!-- ================================================= -->
 
-<!-- ============================= -->
-<!-- MAIN APP -->
-<!-- ============================= -->
+    <section class="section">
 
-<div id="appScreen" class="hidden">
+        <div class="container">
 
-    <div class="account-bar">
+            <h2>
+                What Is TradeContentAI?
+            </h2>
 
-        <div>
+            <p>
+                TradeContentAI is an AI-powered social media
+                content generator designed to help users create
+                posts from simple ideas or topics.
+            </p>
 
-            👤 <span id="userEmail"></span>
+            <p>
+                Instead of starting every post from a blank page,
+                you can enter a topic and let the AI create a
+                structured social media post with a hook, useful
+                information, a call to action, a caption and
+                relevant hashtags.
+            </p>
 
-            <div class="small">
+            <p>
+                The tool can be used for many different subjects.
+                It does not require users to create content about
+                trading or finance. Your topic determines the type
+                of content the AI generates.
+            </p>
 
-                Free generations remaining:
+        </div>
 
-                <span id="remaining">3</span>
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- FEATURES -->
+    <!-- ================================================= -->
+
+    <section class="section">
+
+        <div class="container">
+
+            <h2>
+                How TradeContentAI Helps
+            </h2>
+
+            <div class="features">
+
+                <div class="feature">
+
+                    <h3>
+                        💡 Start With an Idea
+                    </h3>
+
+                    <p>
+                        Enter a simple topic, question, idea or
+                        subject that you want to create content about.
+                    </p>
+
+                </div>
+
+
+                <div class="feature">
+
+                    <h3>
+                        ✍️ Generate a Complete Post
+                    </h3>
+
+                    <p>
+                        The AI can organize your idea into a social
+                        media post with a hook, body, CTA, caption
+                        and hashtags.
+                    </p>
+
+                </div>
+
+
+                <div class="feature">
+
+                    <h3>
+                        📱 Multiple Topics
+                    </h3>
+
+                    <p>
+                        Create content about different subjects
+                        instead of being limited to one particular
+                        niche.
+                    </p>
+
+                </div>
 
             </div>
 
         </div>
 
+    </section>
 
-        <button
-            class="secondary"
-            onclick="logout()">
 
-            Log Out
+    <!-- ================================================= -->
+    <!-- TOPICS -->
+    <!-- ================================================= -->
 
-        </button>
+    <section class="section">
 
-    </div>
+        <div class="container">
 
+            <h2>
+                What Can You Create Content About?
+            </h2>
+
+            <div class="topics">
+
+                <div class="topic-card">
+                    👗 Fashion and Style
+                </div>
+
+                <div class="topic-card">
+                    🍔 Food and Cooking
+                </div>
+
+                <div class="topic-card">
+                    💼 Business and Entrepreneurship
+                </div>
+
+                <div class="topic-card">
+                    💪 Fitness and Wellness
+                </div>
+
+                <div class="topic-card">
+                    💻 Technology
+                </div>
+
+                <div class="topic-card">
+                    ❤️ Relationships
+                </div>
+
+                <div class="topic-card">
+                    🚀 Motivation
+                </div>
+
+                <div class="topic-card">
+                    📈 Trading and Finance
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- AUTH SCREEN -->
+    <!-- ================================================= -->
+
+    <section
+        id="auth"
+        class="auth-wrapper">
+
+        <div id="authScreen" class="box">
+
+            <h2>
+                Start Creating Content
+            </h2>
+
+            <p class="small">
+                Create an account or log in to use
+                TradeContentAI.
+            </p>
+
+
+            <div class="tabs">
+
+                <button
+                    id="loginTab"
+                    onclick="showLogin()">
+                    Log In
+                </button>
+
+                <button
+                    id="signupTab"
+                    class="secondary"
+                    onclick="showSignup()">
+                    Create Account
+                </button>
+
+            </div>
+
+
+            <!-- LOGIN -->
+
+            <div id="loginForm">
+
+                <h3>
+                    Welcome Back
+                </h3>
+
+                <input
+                    id="loginEmail"
+                    type="email"
+                    placeholder="Email address"
+                    autocomplete="email">
+
+                <input
+                    id="loginPassword"
+                    type="password"
+                    placeholder="Password"
+                    autocomplete="current-password">
+
+                <button
+                    id="loginButton"
+                    onclick="login()">
+                    Log In
+                </button>
+
+            </div>
+
+
+            <!-- SIGNUP -->
+
+            <div
+                id="signupForm"
+                class="hidden">
+
+                <h3>
+                    Create Your Account
+                </h3>
+
+                <input
+                    id="signupEmail"
+                    type="email"
+                    placeholder="Email address"
+                    autocomplete="email">
+
+                <input
+                    id="signupPassword"
+                    type="password"
+                    placeholder="Create password"
+                    autocomplete="new-password">
+
+                <button
+                    id="signupButton"
+                    onclick="signup()">
+                    Create Account
+                </button>
+
+            </div>
+
+
+            <div id="authMessage"></div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- MAIN APP -->
+    <!-- ================================================= -->
+
+    <section
+        id="appSection"
+        class="container hidden">
+
+        <div id="appScreen">
+
+            <div class="account-bar">
+
+                <div>
+
+                    👤 <span id="userEmail"></span>
+
+                    <div class="small">
+
+                        Free generations remaining:
+
+                        <span id="remaining">
+                            3
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    class="secondary"
+                    onclick="logout()">
+
+                    Log Out
+
+                </button>
+
+            </div>
+
+
+            <div class="box">
+
+                <h2>
+                    Create Your Social Media Post
+                </h2>
+
+                <p>
+                    What do you want to post about today?
+                </p>
+
+
+                <textarea
+                    id="topic"
+                    rows="4"
+                    placeholder="Example: 5 ways to grow an Instagram page">
+                </textarea>
+
+
+                <button
+                    id="generateButton"
+                    onclick="handleGenerateClick()">
+
+                    Generate Post
+
+                </button>
+
+
+                <div id="output"></div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- INFORMATION -->
+    <!-- ================================================= -->
+
+    <section class="section">
+
+        <div class="container">
+
+            <div class="info-box">
+
+                <h3>
+                    Use AI as a Creative Assistant
+                </h3>
+
+                <p>
+                    AI-generated content should be reviewed before
+                    publishing. Check facts, names, statistics and
+                    other important information to make sure the
+                    final post accurately represents what you want
+                    to communicate.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+<!-- ===================================================== -->
+<!-- FOOTER -->
+<!-- ===================================================== -->
+
+<footer>
 
     <p>
-        What do you want to post about today?
+        © 2026 TradeContentAI
     </p>
 
+    <p>
+        AI-powered social media content creation.
+    </p>
 
-    <textarea
-        id="topic"
-        rows="3"
-        placeholder="Example: 5 ways to grow an Instagram page">
-    </textarea>
-
-
-    <button
-        id="generateButton"
-        onclick="handleGenerateClick()">
-
-        Generate Post
-
-    </button>
-
-
-    <div id="output"></div>
-
-</div>
+</footer>
 
 
 
@@ -576,7 +1066,7 @@ async function logout() {
 
 
     document
-        .getElementById("appScreen")
+        .getElementById("appSection")
         .classList.add("hidden");
 
 
@@ -586,6 +1076,8 @@ async function logout() {
 
 
     showLogin();
+
+    window.location.hash = "auth";
 
 }
 
@@ -606,7 +1098,7 @@ async function showApp(user) {
 
 
     document
-        .getElementById("appScreen")
+        .getElementById("appSection")
         .classList.remove("hidden");
 
 
@@ -615,10 +1107,6 @@ async function showApp(user) {
         .innerText =
             user.email || "";
 
-
-    // IMPORTANT:
-    // We do NOT query generation_requests here.
-    // The server is now responsible for the real limit.
 
     document
         .getElementById("remaining")
@@ -634,6 +1122,9 @@ async function showApp(user) {
         .getElementById("generateButton")
         .innerText =
             "Generate Post";
+
+
+    window.location.hash = "appSection";
 
 }
 
@@ -677,7 +1168,7 @@ async function checkUser() {
                 .classList.remove("hidden");
 
             document
-                .getElementById("appScreen")
+                .getElementById("appSection")
                 .classList.add("hidden");
 
         }
@@ -894,9 +1385,6 @@ async function handleGenerateClick() {
             data.content;
 
 
-        // Server is the authority for the
-        // remaining generation count.
-
         if (
             typeof data.remaining !==
             "undefined"
@@ -976,4 +1464,5 @@ checkUser();
 </script>
 
 </body>
-            </html>
+
+</html>
